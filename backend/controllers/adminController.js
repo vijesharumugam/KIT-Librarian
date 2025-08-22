@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
+const Student = require('../models/Student');
+const Book = require('../models/Book');
 
 const loginAdmin = async (req, res) => {
   try {
@@ -43,6 +45,31 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+// Get admin dashboard statistics
+const getStats = async (req, res) => {
+  try {
+    const now = new Date();
+    const [
+      totalStudents,
+      totalBooks,
+      issuedBooks,
+      overdueBooks
+    ] = await Promise.all([
+      Student.countDocuments({}),
+      Book.countDocuments({}),
+      // Issued = books not available
+      Book.countDocuments({ availability: false }),
+      // Overdue = not available and dueDate in the past
+      Book.countDocuments({ availability: false, dueDate: { $lt: now } })
+    ]);
+    return res.json({ totalStudents, totalBooks, issuedBooks, overdueBooks });
+  } catch (error) {
+    console.error('Get stats error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
-  loginAdmin
+  loginAdmin,
+  getStats
 };

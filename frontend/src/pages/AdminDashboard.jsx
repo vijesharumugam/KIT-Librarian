@@ -11,7 +11,10 @@ const AdminDashboard = () => {
   const [editRow, setEditRow] = useState(null); // book _id currently being edited
   const [students, setStudents] = useState([]);
   const [borrowForm, setBorrowForm] = useState({ registerNumber: '', bookId: '', dueDate: '' });
-  
+  const [totalBooks, setTotalBooks] = useState(0);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [issuedBooks, setIssuedBooks] = useState(0);
+  const [overdueBooks, setOverdueBooks] = useState(0);
 
   // Simple ComboBox component (local)
   const ComboBox = ({ items, getLabel, getValue, placeholder, value, onChange }) => {
@@ -76,6 +79,25 @@ const AdminDashboard = () => {
     );
   };
 
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      const res = await fetch('http://localhost:5000/api/admin/stats', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch stats');
+      setTotalBooks(Number(data.totalBooks) || 0);
+      setTotalStudents(Number(data.totalStudents) || 0);
+      setIssuedBooks(Number(data.issuedBooks) || 0);
+      setOverdueBooks(Number(data.overdueBooks) || 0);
+    } catch (e) {
+      // Surface but do not break the page
+      setError(e.message);
+    }
+  };
+
   useEffect(() => {
     // Check if admin token exists
     const token = localStorage.getItem('adminToken');
@@ -89,6 +111,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchBooks();
+      fetchStats();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
@@ -106,6 +129,8 @@ const AdminDashboard = () => {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
         setStudents(data);
+        // refresh stats in case students count changed
+        fetchStats();
       } catch (e) {
         setError(e.message);
       }
@@ -142,6 +167,8 @@ const AdminDashboard = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to add book');
       setCreateForm({ title: '', author: '', isbn: '' });
       fetchBooks();
+      // update stats after adding a new book
+      fetchStats();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -176,6 +203,7 @@ const AdminDashboard = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to update book');
       setEditRow(null);
       fetchBooks();
+      fetchStats();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -192,6 +220,7 @@ const AdminDashboard = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to delete book');
       fetchBooks();
+      fetchStats();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -214,6 +243,7 @@ const AdminDashboard = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to issue book');
       setBorrowForm({ registerNumber: '', bookId: '', dueDate: '' });
       fetchBooks();
+      fetchStats();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -234,6 +264,7 @@ const AdminDashboard = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to return book');
       fetchBooks();
+      fetchStats();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -299,7 +330,7 @@ const AdminDashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Books</dt>
-                      <dd className="text-lg font-medium text-gray-900">200</dd>
+                      <dd className="text-lg font-medium text-gray-900">{totalBooks}</dd>
                     </dl>
                   </div>
                 </div>
@@ -319,7 +350,7 @@ const AdminDashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Total Students</dt>
-                      <dd className="text-lg font-medium text-gray-900">50</dd>
+                      <dd className="text-lg font-medium text-gray-900">{totalStudents}</dd>
                     </dl>
                   </div>
                 </div>
@@ -339,7 +370,7 @@ const AdminDashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Books Issued</dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">{issuedBooks}</dd>
                     </dl>
                   </div>
                 </div>
@@ -359,7 +390,7 @@ const AdminDashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Overdue Books</dt>
-                      <dd className="text-lg font-medium text-gray-900">0</dd>
+                      <dd className="text-lg font-medium text-gray-900">{overdueBooks}</dd>
                     </dl>
                   </div>
                 </div>
