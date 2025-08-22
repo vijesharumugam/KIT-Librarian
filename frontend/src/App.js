@@ -5,6 +5,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentLogin from './pages/StudentLogin';
 import StudentDashboard from './pages/StudentDashboard';
+import BooksPage from './pages/BooksPage';
 
 // Home component
 const Home = () => (
@@ -49,6 +50,12 @@ const Home = () => (
           >
             Student Login
           </Link>
+          <Link 
+            to="/books" 
+            className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            View Books
+          </Link>
         </div>
       </div>
     </main>
@@ -64,6 +71,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/books" element={<BooksPage />} />
       </Routes>
     </Router>
   );
