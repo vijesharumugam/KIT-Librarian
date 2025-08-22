@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState(null);
+  // Using HttpOnly cookie for auth; no token in JS state
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [current, setCurrent] = useState([]);
@@ -11,12 +11,24 @@ const StudentDashboard = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const t = localStorage.getItem('studentToken');
-    if (!t) {
-      navigate('/student/login');
-    } else {
-      setToken(t);
-    }
+    // Ping current to check auth via cookie; redirect if unauthorized
+    (async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/student/current', {
+          credentials: 'include',
+        });
+        if (res.status === 401) {
+          navigate('/student/login');
+          return;
+        }
+        const data = await res.json();
+        if (res.ok) {
+          setCurrent(data.currentBooks || []);
+        }
+      } catch (e) {
+        // ignore initial error; can still use page
+      }
+    })();
   }, [navigate]);
 
   const fetchCurrent = useCallback(async () => {
@@ -24,7 +36,7 @@ const StudentDashboard = () => {
       setLoading(true);
       setError('');
       const res = await fetch('http://localhost:5000/api/student/current', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to load current books');
@@ -34,12 +46,11 @@ const StudentDashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
-    if (!token) return;
     fetchCurrent();
-  }, [token, fetchCurrent]);
+  }, [fetchCurrent]);
 
   const canSearch = useMemo(() => query.trim().length > 1, [query]);
 
@@ -71,8 +82,13 @@ const StudentDashboard = () => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('studentToken');
+  const logout = async () => {
+    try {
+      await fetch('http://localhost:5000/api/student/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {}
     navigate('/student/login');
   };
 
@@ -136,12 +152,12 @@ const StudentDashboard = () => {
           ) : (
             <ul className="divide-y">
               {current.map((c, idx) => (
-                <li key={idx} className="py-3 flex items-center justify-between">
+                <li key={c._id || idx} className="py-3 flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-gray-900">{c.book?.title || 'Unknown title'}</div>
-                    <div className="text-sm text-gray-600">{c.book?.author} · ISBN {c.book?.isbn}</div>
+                    <div className="font-medium text-gray-900">{c.title || 'Unknown title'}</div>
+                    <div className="text-sm text-gray-600">{c.author} · ISBN {c.isbn}</div>
                   </div>
-                  <div className="text-sm text-gray-700">Due: {c.dueDate ? new Date(c.dueDate).toLocaleDateString() : '-'}</div>
+                  {/* Due date no longer tracked on student items; if needed, fetch from Transaction */}
                 </li>
               ))}
             </ul>

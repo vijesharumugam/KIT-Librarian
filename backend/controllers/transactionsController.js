@@ -25,8 +25,8 @@ const borrowBook = async (req, res) => {
       dueDate: new Date(dueDate),
     });
 
-    // Update student and book
-    student.currentBooks.push({ bookId: book._id, dueDate: new Date(dueDate) });
+    // Update student and book: store only Book ObjectId in student's currentBooks
+    student.currentBooks.push(book._id);
     await student.save();
 
     book.availability = false;
@@ -74,7 +74,7 @@ const returnBook = async (req, res) => {
     const student = await Student.findById(tx.studentId);
     if (student) {
       student.currentBooks = (student.currentBooks || []).filter(
-        (cb) => cb.bookId.toString() !== tx.bookId.toString()
+        (cb) => cb.toString() !== tx.bookId.toString()
       );
       await student.save();
     }

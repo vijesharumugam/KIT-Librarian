@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { requestOtp, verifyOtp, getCurrentStudent } = require('../controllers/studentController');
-const studentAuth = require('../middleware/studentAuth');
+const { registerStudent, loginStudent, logoutStudent, getCurrentStudent } = require('../controllers/studentController');
+const { verifyStudent } = require('../middleware/authMiddleware');
 
-// Student OTP login routes
-router.post('/login', requestOtp); // request OTP
-router.post('/verify', verifyOtp); // verify OTP and get JWT
-// current student borrowed books
-router.get('/current', studentAuth, getCurrentStudent);
+// Password-based student auth routes
+router.post('/register', registerStudent);
+router.post('/login', loginStudent);
+router.get('/current', verifyStudent, getCurrentStudent);
+router.post('/logout', logoutStudent);
 
 module.exports = router;

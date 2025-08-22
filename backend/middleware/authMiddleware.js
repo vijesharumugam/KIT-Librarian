@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
+const Student = require('../models/Student');
 
+// Admin auth (backward compatible default export)
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -23,4 +25,26 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = authMiddleware;
+// Student auth
+async function verifyStudent(req, res, next) {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.studentToken;
+    if (!token) return res.status(401).json({ message: 'No token provided' });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    if (!decoded || decoded.role !== 'student') {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    const student = await Student.findById(decoded.id).select('-password');
+    if (!student) return res.status(401).json({ message: 'Student not found' });
+
+    req.student = student;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+}
+
+module.exports = authMiddleware; // default export remains admin middleware
+module.exports.verifyStudent = verifyStudent; // named export for student auth

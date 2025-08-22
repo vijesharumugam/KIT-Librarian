@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const Book = require('./models/Book');
@@ -116,6 +117,8 @@ const generateStudents = () => {
     students.push({
       registerNumber,
       phoneNumber,
+      // default password (will be hashed before insert)
+      password: '12345678',
       currentBooks: [] // Initially no books issued
     });
   }
@@ -142,7 +145,13 @@ const seedDatabase = async () => {
     
     // Generate and insert students
     const students = generateStudents();
-    await Student.insertMany(students);
+    // Manually hash passwords because insertMany does not trigger pre('save') hooks
+    const salt = await bcrypt.genSalt(10);
+    const studentsWithHashed = await Promise.all(students.map(async (s) => ({
+      ...s,
+      password: await bcrypt.hash(s.password, salt),
+    })));
+    await Student.insertMany(studentsWithHashed);
     console.log(`Inserted ${students.length} students`);
     
     // Create default admin user

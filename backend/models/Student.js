@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const studentSchema = new mongoose.Schema({
   registerNumber: {
@@ -12,33 +13,30 @@ const studentSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  // OTP login support
-  otpCode: {
+  password: {
     type: String,
-    default: null
+    required: true,
   },
-  otpExpiry: {
-    type: Date,
-    default: null
-  },
-  // For demo: persist last issued token. In production, prefer stateless JWT without storing.
-  lastLoginToken: {
-    type: String,
-    default: null
-  },
-  currentBooks: [{
-    bookId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Book',
-      required: true
-    },
-    dueDate: {
-      type: Date,
-      required: true
-    }
-  }]
+  currentBooks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }]
 }, {
   timestamps: true
 });
+
+// Hash password before saving if modified
+studentSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Compare password helper
+studentSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model('Student', studentSchema);

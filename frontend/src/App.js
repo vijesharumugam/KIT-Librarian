@@ -4,6 +4,7 @@ import './App.css';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentLogin from './pages/StudentLogin';
+import StudentRegister from './pages/StudentRegister';
 import StudentDashboard from './pages/StudentDashboard';
 import BooksPage from './pages/BooksPage';
 
@@ -70,6 +71,7 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/student/login" element={<StudentLogin />} />
+        <Route path="/student/register" element={<StudentRegister />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/books" element={<BooksPage />} />
       </Routes>
