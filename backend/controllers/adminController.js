@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Student = require('../models/Student');
 const Book = require('../models/Book');
+const Transaction = require('../models/Transaction');
 
 const loginAdmin = async (req, res) => {
   try {
@@ -49,20 +50,27 @@ const loginAdmin = async (req, res) => {
 const getStats = async (req, res) => {
   try {
     const now = new Date();
-    const [
-      totalStudents,
-      totalBooks,
-      issuedBooks,
-      overdueBooks
-    ] = await Promise.all([
+    const [studentsCount, booksCount, issuedAgg, overdueTx] = await Promise.all([
       Student.countDocuments({}),
-      Book.countDocuments({}),
-      // Issued = books not available
-      Book.countDocuments({ availability: false }),
-      // Overdue = not available and dueDate in the past
-      Book.countDocuments({ availability: false, dueDate: { $lt: now } })
+      Book.countDocuments({}), // number of rows/documents in books collection
+      Book.aggregate([
+        {
+          $group: {
+            _id: null,
+            issuedCount: { $sum: { $ifNull: ["$issuedCount", 0] } },
+          },
+        },
+      ]),
+      Transaction.countDocuments({ returnDate: null, dueDate: { $lt: now } }),
     ]);
-    return res.json({ totalStudents, totalBooks, issuedBooks, overdueBooks });
+
+    const issuedCount = issuedAgg[0]?.issuedCount || 0;
+    return res.json({
+      totalStudents: studentsCount,
+      totalBooks: booksCount,
+      issuedBooks: issuedCount,
+      overdueBooks: overdueTx,
+    });
   } catch (error) {
     console.error('Get stats error:', error);
     return res.status(500).json({ message: 'Server error' });

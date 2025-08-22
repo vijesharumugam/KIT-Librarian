@@ -17,7 +17,10 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  currentBooks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }]
+  currentBooks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }],
+  // Persistent counters for quick dashboard stats
+  booksBorrowedCount: { type: Number, default: 0 },
+  overdueBooksCount: { type: Number, default: 0 }
 }, {
   timestamps: true
 });

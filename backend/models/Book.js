@@ -17,6 +17,18 @@ const bookSchema = new mongoose.Schema({
     unique: true,
     trim: true
   },
+  totalQuantity: {
+    type: Number,
+    required: true,
+    default: 1,
+    min: 0,
+  },
+  issuedCount: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0,
+  },
   availability: {
     type: Boolean,
     default: true

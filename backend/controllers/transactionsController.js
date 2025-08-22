@@ -16,7 +16,8 @@ const borrowBook = async (req, res) => {
 
     const book = await Book.findById(bookId);
     if (!book) return res.status(404).json({ message: 'Book not found' });
-    if (!book.availability) return res.status(400).json({ message: 'Book is not available' });
+    const remaining = (book.totalQuantity || 0) - (book.issuedCount || 0);
+    if (remaining <= 0) return res.status(400).json({ message: 'No copies available' });
 
     // Create transaction
     const tx = await Transaction.create({
@@ -27,10 +28,15 @@ const borrowBook = async (req, res) => {
 
     // Update student and book: store only Book ObjectId in student's currentBooks
     student.currentBooks.push(book._id);
+    // Maintain persistent counters
+    student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) + 1);
+    // We don't increment overdue here; that flips when dueDate passes
     await student.save();
 
-    book.availability = false;
-    book.dueDate = new Date(dueDate);
+    book.issuedCount = (book.issuedCount || 0) + 1;
+    const newRemaining = (book.totalQuantity || 0) - (book.issuedCount || 0);
+    book.availability = newRemaining > 0;
+    // Do not set book.dueDate; due dates tracked per transaction
     await book.save();
 
     return res.status(201).json({ message: 'Book issued', transaction: tx });
@@ -65,8 +71,10 @@ const returnBook = async (req, res) => {
     // Update book
     const book = await Book.findById(tx.bookId);
     if (book) {
-      book.availability = true;
-      book.dueDate = null;
+      book.issuedCount = Math.max(0, (book.issuedCount || 0) - 1);
+      const remaining = (book.totalQuantity || 0) - (book.issuedCount || 0);
+      book.availability = remaining > 0;
+      // Do not set book.dueDate; due dates tracked per transaction
       await book.save();
     }
 
@@ -76,6 +84,11 @@ const returnBook = async (req, res) => {
       student.currentBooks = (student.currentBooks || []).filter(
         (cb) => cb.toString() !== tx.bookId.toString()
       );
+      // Decrement counters
+      student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) - 1);
+      if (tx.dueDate && new Date(tx.dueDate) < new Date()) {
+        student.overdueBooksCount = Math.max(0, (student.overdueBooksCount || 0) - 1);
+      }
       await student.save();
     }
 
@@ -87,3 +100,97 @@ const returnBook = async (req, res) => {
 };
 
 module.exports = { borrowBook, returnBook };
+
+// GET /api/transactions/issued
+// Returns all active (not returned) transactions with populated book title and student registerNumber
+async function listIssued(req, res) {
+  try {
+    const txs = await Transaction.find({ returnDate: null })
+      .populate({ path: 'bookId', select: 'title' })
+      .populate({ path: 'studentId', select: 'registerNumber' })
+      .sort({ issueDate: -1 })
+      .lean();
+    const items = txs.map((t) => ({
+      _id: t._id,
+      book: t.bookId ? { _id: t.bookId._id, title: t.bookId.title } : null,
+      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber } : null,
+      dueDate: t.dueDate,
+      issueDate: t.issueDate,
+    }));
+    return res.json(items);
+  } catch (err) {
+    console.error('List issued error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// PUT /api/transactions/return/:id
+// Marks a transaction as returned and updates related Book and Student
+async function returnById(req, res) {
+  try {
+    const { id } = req.params;
+    const tx = await Transaction.findById(id);
+    if (!tx) return res.status(404).json({ message: 'Transaction not found' });
+    if (tx.returnDate) return res.status(400).json({ message: 'Transaction already returned' });
+
+    tx.returnDate = new Date();
+    await tx.save();
+
+    // Update book
+    const book = await Book.findById(tx.bookId);
+    if (book) {
+      book.issuedCount = Math.max(0, (book.issuedCount || 0) - 1);
+      const remaining = (book.totalQuantity || 0) - (book.issuedCount || 0);
+      book.availability = remaining > 0; // set availability based on remaining
+      await book.save();
+    }
+
+    // Update student: remove book from currentBooks
+    const student = await Student.findById(tx.studentId);
+    if (student) {
+      student.currentBooks = (student.currentBooks || []).filter(
+        (cb) => cb.toString() !== tx.bookId.toString()
+      );
+      // Decrement counters
+      student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) - 1);
+      if (tx.dueDate && new Date(tx.dueDate) < new Date()) {
+        student.overdueBooksCount = Math.max(0, (student.overdueBooksCount || 0) - 1);
+      }
+      await student.save();
+    }
+
+    return res.json({ message: 'Book returned', transaction: tx });
+  } catch (err) {
+    console.error('Return by id error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports.listIssued = listIssued;
+module.exports.returnById = returnById;
+
+// GET /api/transactions/overdue
+// Returns all active transactions whose dueDate is past now
+async function listOverdue(req, res) {
+  try {
+    const now = new Date();
+    const txs = await Transaction.find({ returnDate: null, dueDate: { $lt: now } })
+      .populate({ path: 'bookId', select: 'title' })
+      .populate({ path: 'studentId', select: 'registerNumber phoneNumber' })
+      .sort({ dueDate: 1 })
+      .lean();
+    const items = txs.map((t) => ({
+      _id: t._id,
+      book: t.bookId ? { _id: t.bookId._id, title: t.bookId.title } : null,
+      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber, phoneNumber: t.studentId.phoneNumber } : null,
+      dueDate: t.dueDate,
+      issueDate: t.issueDate,
+    }));
+    return res.json(items);
+  } catch (err) {
+    console.error('List overdue error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports.listOverdue = listOverdue;

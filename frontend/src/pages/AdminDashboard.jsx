@@ -1,86 +1,45 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
-  const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [createForm, setCreateForm] = useState({ title: '', author: '', isbn: '' });
-  const [editRow, setEditRow] = useState(null); // book _id currently being edited
-  const [students, setStudents] = useState([]);
-  const [borrowForm, setBorrowForm] = useState({ registerNumber: '', bookId: '', dueDate: '' });
   const [totalBooks, setTotalBooks] = useState(0);
   const [totalStudents, setTotalStudents] = useState(0);
   const [issuedBooks, setIssuedBooks] = useState(0);
   const [overdueBooks, setOverdueBooks] = useState(0);
+  const [books, setBooks] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [borrowForm, setBorrowForm] = useState({ registerNumber: '', bookId: '', bookDisplay: '', dueDate: '' });
+  const [createForm, setCreateForm] = useState({ title: '', author: '', isbn: '', totalQuantity: 1 });
+  const [editRow, setEditRow] = useState(null); // holds editable book object
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Simple ComboBox component (local)
-  const ComboBox = ({ items, getLabel, getValue, placeholder, value, onChange }) => {
-    const [open, setOpen] = useState(false);
-    const [inputVal, setInputVal] = useState('');
-    const boxRef = useRef(null);
-
-    useEffect(() => {
-      const handler = (e) => {
-        if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
-      };
-      document.addEventListener('mousedown', handler);
-      return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    // When external value changes, sync display
-    useEffect(() => {
-      const selected = items.find((it) => String(getValue(it)) === String(value));
-      setInputVal(selected ? getLabel(selected) : '');
-    }, [value, items, getLabel, getValue]);
-
-    const filtered = useMemo(() => {
-      const q = (inputVal || '').toLowerCase();
-      if (!q) return items.slice(0, 50);
-      return items.filter((it) => getLabel(it).toLowerCase().includes(q)).slice(0, 50);
-    }, [items, inputVal, getLabel]);
-
-    const selectItem = (it) => {
-      onChange(getValue(it));
-      setInputVal(getLabel(it));
-      setOpen(false);
-    };
-
-    return (
-      <div className="relative" ref={boxRef}>
-        <input
-          type="text"
-          placeholder={placeholder}
-          className="border border-gray-300 rounded-md px-3 py-2 w-full"
-          value={inputVal}
-          onChange={(e) => { setInputVal(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
-        />
-        {open && (
-          <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded-md shadow">
-            {filtered.length === 0 && (
-              <div className="px-3 py-2 text-sm text-gray-500">No results</div>
-            )}
-            {filtered.map((it) => (
-              <button
-                type="button"
-                key={String(getValue(it))}
-                className="block w-full text-left px-3 py-2 hover:bg-gray-100 text-sm"
-                onClick={() => selectItem(it)}
-              >
-                {getLabel(it)}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+  // Pagination memo
+  const filteredBooks = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return books;
+    return books.filter((b) =>
+      [b.title, b.author, b.isbn].some((v) => (v || '').toLowerCase().includes(term))
     );
-  };
+  }, [books, searchTerm]);
+  const totalPages = Math.max(1, Math.ceil((filteredBooks?.length || 0) / pageSize));
+  const currentBooks = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredBooks.slice(start, start + pageSize);
+  }, [filteredBooks, page, pageSize]);
+
+  // Helpers
+  const bookLabel = (b) => `${b.title} · ${b.author} (ISBN ${b.isbn})`;
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
+      setError('');
       const token = localStorage.getItem('adminToken');
       if (!token) return;
       const res = await fetch('http://localhost:5000/api/admin/stats', {
@@ -95,99 +54,50 @@ const AdminDashboard = () => {
     } catch (e) {
       // Surface but do not break the page
       setError(e.message);
-    }
-  };
-
-  useEffect(() => {
-    // Check if admin token exists
-    const token = localStorage.getItem('adminToken');
-    if (!token) {
-      navigate('/admin/login');
-    } else {
-      setIsAuthenticated(true);
-    }
-  }, [navigate]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchBooks();
-      fetchStats();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    // fetch students list for borrow form
-    const loadStudents = async () => {
-      try {
-        setError('');
-        const token = localStorage.getItem('adminToken');
-        const res = await fetch('http://localhost:5000/api/students', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
-        setStudents(data);
-        // refresh stats in case students count changed
-        fetchStats();
-      } catch (e) {
-        setError(e.message);
-      }
-    };
-    loadStudents();
-  }, [isAuthenticated]);
-
-  const fetchBooks = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const res = await fetch('http://localhost:5000/api/books');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
-      setBooks(data);
-    } catch (e) {
-      setError(e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
+  // Issued count from active transactions
+  const fetchIssuedCount = async () => {
     try {
-      setLoading(true);
-      setError('');
-      const res = await fetch('http://localhost:5000/api/books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...createForm }),
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      const res = await fetch('http://localhost:5000/api/transactions/issued', {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to add book');
-      setCreateForm({ title: '', author: '', isbn: '' });
-      fetchBooks();
-      // update stats after adding a new book
-      fetchStats();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+      if (!res.ok) return; // don't override on error
+      setIssuedBooks(Array.isArray(data) ? data.length : 0);
+    } catch (_) {
+      // ignore
     }
   };
 
+  // Overdue count from active overdue transactions
+  const fetchOverdueCount = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+      const res = await fetch('http://localhost:5000/api/transactions/overdue', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) return;
+      setOverdueBooks(Array.isArray(data) ? data.length : 0);
+    } catch (_) {}
+  };
+
+  // Inline edit handlers
   const startEdit = (book) => {
-    setEditRow({
-      _id: book._id,
-      availability: !!book.availability,
-      dueDate: book.dueDate ? book.dueDate.substring(0, 10) : '',
-    });
+    setEditRow({ ...book, dueDate: book.dueDate ? book.dueDate.substring(0, 10) : '' });
   };
 
   const cancelEdit = () => setEditRow(null);
 
   const saveEdit = async () => {
-    if (!editRow) return;
+    if (!editRow?._id) return;
     try {
       setLoading(true);
       setError('');
@@ -195,8 +105,11 @@ const AdminDashboard = () => {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          title: editRow.title,
+          author: editRow.author,
+          isbn: editRow.isbn,
           availability: editRow.availability,
-          dueDate: editRow.dueDate ? new Date(editRow.dueDate).toISOString() : null,
+          dueDate: editRow.dueDate || null,
         }),
       });
       const data = await res.json();
@@ -212,12 +125,12 @@ const AdminDashboard = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this book?')) return;
+    if (!id) return;
     try {
       setLoading(true);
       setError('');
       const res = await fetch(`http://localhost:5000/api/books/${id}`, { method: 'DELETE' });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || 'Failed to delete book');
       fetchBooks();
       fetchStats();
@@ -228,30 +141,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const submitBorrow = async (e) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      setError('');
-      const token = localStorage.getItem('adminToken');
-      const res = await fetch('http://localhost:5000/api/transactions/borrow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...borrowForm }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to issue book');
-      setBorrowForm({ registerNumber: '', bookId: '', dueDate: '' });
-      fetchBooks();
-      fetchStats();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const returnBook = async (bookId) => {
+  const returnBookRow = async (bookId) => {
     try {
       setLoading(true);
       setError('');
@@ -263,6 +153,127 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to return book');
+      fetchBooks();
+      fetchStats();
+      fetchIssuedCount();
+      fetchOverdueCount();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Check if admin token exists
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      navigate('/admin/login');
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchStats();
+      fetchBooks();
+      fetchIssuedCount();
+      fetchOverdueCount();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
+
+  // Load students when authenticated (for borrow form)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const loadStudents = async () => {
+      try {
+        setError('');
+        const token = localStorage.getItem('adminToken');
+        const res = await fetch('http://localhost:5000/api/students', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
+        setStudents(data || []);
+      } catch (e) {
+        setError(e.message);
+      }
+    };
+    loadStudents();
+  }, [isAuthenticated]);
+
+  // Fetch books for borrow selector
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch('http://localhost:5000/api/books');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
+      setBooks(data || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create new book
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch('http://localhost:5000/api/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: createForm.title,
+          author: createForm.author,
+          isbn: createForm.isbn,
+          totalQuantity: Number(createForm.totalQuantity)
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to add book');
+      setCreateForm({ title: '', author: '', isbn: '', totalQuantity: 1 });
+      fetchBooks();
+      fetchStats();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Borrow book
+  const submitBorrow = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError('');
+      const token = localStorage.getItem('adminToken');
+      // Resolve bookId from typed label if needed
+      let chosenBookId = borrowForm.bookId;
+      if (!chosenBookId && borrowForm.bookDisplay) {
+        const match = books.find((b) => b.availability && bookLabel(b).toLowerCase() === borrowForm.bookDisplay.trim().toLowerCase());
+        if (match) chosenBookId = match._id;
+      }
+      if (!chosenBookId) {
+        setLoading(false);
+        setError('Please select a valid available book');
+        return;
+      }
+      const res = await fetch('http://localhost:5000/api/transactions/borrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ registerNumber: borrowForm.registerNumber, bookId: chosenBookId, dueDate: borrowForm.dueDate }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to issue book');
+      setBorrowForm({ registerNumber: '', bookId: '', bookDisplay: '', dueDate: '' });
       fetchBooks();
       fetchStats();
     } catch (e) {
@@ -317,7 +328,7 @@ const AdminDashboard = () => {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {/* Stats Cards */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <Link to="/admin/books" className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -335,9 +346,9 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <Link to="/admin/dashboard/students" className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-green-500">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -355,9 +366,9 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <Link to="/admin/dashboard/books-issued" className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-yellow-500">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -375,9 +386,9 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <Link to="/admin/dashboard/books-overdue" className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-red-500">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -395,6 +406,109 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+            </Link>
+          </div>
+
+          {/* Books Management Table */}
+          <div className="bg-white shadow rounded-lg mb-8">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">Books</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search by title, author, ISBN"
+                    className="border border-gray-300 rounded-md px-3 py-2 w-72"
+                    value={searchTerm}
+                    onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
+                  />
+                  <span className="text-sm text-gray-500">{filteredBooks.length} items</span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ISBN</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Availability</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                      <th className="px-4 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentBooks.map((b) => (
+                      <tr key={b._id} className="hover:bg-gray-50">
+                        {editRow?._id === b._id ? (
+                          <>
+                            <td className="px-4 py-2">
+                              <input className="border rounded px-2 py-1 w-full" value={editRow.title} onChange={(e) => setEditRow({ ...editRow, title: e.target.value })} />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input className="border rounded px-2 py-1 w-full" value={editRow.author} onChange={(e) => setEditRow({ ...editRow, author: e.target.value })} />
+                            </td>
+                            <td className="px-4 py-2">
+                              <input className="border rounded px-2 py-1 w-full" value={editRow.isbn} onChange={(e) => setEditRow({ ...editRow, isbn: e.target.value })} />
+                            </td>
+                            <td className="px-4 py-2">
+                              <select className="border rounded px-2 py-1" value={editRow.availability} onChange={(e) => setEditRow({ ...editRow, availability: e.target.value === 'true' })}>
+                                <option value="true">Available</option>
+                                <option value="false">Issued</option>
+                              </select>
+                            </td>
+                            <td className="px-4 py-2">
+                              <input type="date" className="border rounded px-2 py-1" value={editRow.dueDate || ''} onChange={(e) => setEditRow({ ...editRow, dueDate: e.target.value })} />
+                            </td>
+                            <td className="px-4 py-2 text-right whitespace-nowrap">
+                              <button onClick={saveEdit} className="text-emerald-700 hover:text-emerald-900 mr-3">Save</button>
+                              <button onClick={cancelEdit} className="text-gray-600 hover:text-gray-800">Cancel</button>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-4 py-2 text-sm text-gray-900">{b.title}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{b.author}</td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{b.isbn}</td>
+                            <td className="px-4 py-2 text-sm">
+                              {b.availability ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Available</span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Issued</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 text-sm text-gray-900">{b.dueDate ? new Date(b.dueDate).toLocaleDateString() : '-'}</td>
+                            <td className="px-4 py-2 text-right whitespace-nowrap">
+                              <button onClick={() => startEdit(b)} className="text-blue-700 hover:text-blue-900 mr-3">Edit</button>
+                              <button onClick={() => handleDelete(b._id)} className="text-red-700 hover:text-red-900 mr-3">Delete</button>
+                              {b.availability ? (
+                                <button onClick={() => { setBorrowForm({ ...borrowForm, bookId: b._id }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-emerald-700 hover:text-emerald-900">Borrow</button>
+                              ) : (
+                                <button onClick={() => returnBookRow(b._id)} className="text-indigo-700 hover:text-indigo-900">Return</button>
+                              )}
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                    {currentBooks.length === 0 && (
+                      <tr>
+                        <td colSpan="6" className="px-4 py-6 text-center text-sm text-gray-500">No books found</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-600">Page {page} of {totalPages}</div>
+                <div className="space-x-2">
+                  <button className="px-3 py-1 border rounded disabled:opacity-50" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>Prev</button>
+                  <button className="px-3 py-1 border rounded disabled:opacity-50" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>Next</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -403,23 +517,39 @@ const AdminDashboard = () => {
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Borrow Book</h3>
               <form className="grid grid-cols-1 md:grid-cols-5 gap-4" onSubmit={submitBorrow}>
-                <ComboBox
-                  items={students}
-                  getLabel={(s) => `${s.registerNumber} (${s.phoneNumber})`}
-                  getValue={(s) => s.registerNumber}
-                  placeholder="Search/select student"
-                  value={borrowForm.registerNumber}
-                  onChange={(val) => setBorrowForm({ ...borrowForm, registerNumber: val })}
-                />
+                {/* Searchable Student ComboBox via datalist */}
+                <div>
+                  <input
+                    className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                    list="studentsList"
+                    placeholder="Type to search student"
+                    value={borrowForm.registerNumber}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, registerNumber: e.target.value })}
+                    required
+                  />
+                  <datalist id="studentsList">
+                    {students.map((s) => (
+                      <option key={s._id || s.registerNumber} value={s.registerNumber}>{`${s.registerNumber} ${s.phoneNumber ? `(${s.phoneNumber})` : ''}`}</option>
+                    ))}
+                  </datalist>
+                </div>
 
-                <ComboBox
-                  items={books.filter((b) => b.availability)}
-                  getLabel={(b) => `${b.title} · ${b.author} (ISBN ${b.isbn})`}
-                  getValue={(b) => b._id}
-                  placeholder="Search/select book"
-                  value={borrowForm.bookId}
-                  onChange={(val) => setBorrowForm({ ...borrowForm, bookId: val })}
-                />
+                {/* Searchable Book ComboBox via datalist */}
+                <div>
+                  <input
+                    className="border border-gray-300 rounded-md px-3 py-2 w-full"
+                    list="booksList"
+                    placeholder="Type to search available book"
+                    value={borrowForm.bookDisplay}
+                    onChange={(e) => setBorrowForm({ ...borrowForm, bookDisplay: e.target.value, bookId: '' })}
+                    required
+                  />
+                  <datalist id="booksList">
+                    {books.filter((b) => b.availability).map((b) => (
+                      <option key={b._id} value={`${b.title} · ${b.author} (ISBN ${b.isbn})`}></option>
+                    ))}
+                  </datalist>
+                </div>
 
                 <input
                   type="date"
@@ -429,31 +559,10 @@ const AdminDashboard = () => {
                   onChange={(e) => setBorrowForm({ ...borrowForm, dueDate: e.target.value })}
                 />
 
-                <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700" disabled={loading || !borrowForm.registerNumber || !borrowForm.bookId || !borrowForm.dueDate}>
+                <button type="submit" className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700" disabled={loading || !borrowForm.registerNumber || !(borrowForm.bookId || borrowForm.bookDisplay) || !borrowForm.dueDate}>
                   {loading ? 'Issuing...' : 'Issue Book'}
                 </button>
               </form>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <button className="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors text-center">
-                  Add New Book
-                </button>
-                <button className="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors text-center">
-                  Register Student
-                </button>
-                <button className="bg-yellow-600 text-white px-4 py-3 rounded-lg hover:bg-yellow-700 transition-colors text-center">
-                  Issue Book
-                </button>
-                <button className="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors text-center">
-                  View Reports
-                </button>
-              </div>
             </div>
           </div>
 
@@ -461,7 +570,7 @@ const AdminDashboard = () => {
           <div className="bg-white shadow rounded-lg mt-8">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Add New Book</h3>
-              <form className="grid grid-cols-1 md:grid-cols-4 gap-4" onSubmit={handleCreate}>
+              <form className="grid grid-cols-1 md:grid-cols-5 gap-4" onSubmit={handleCreate}>
                 <input
                   type="text"
                   required
@@ -486,6 +595,15 @@ const AdminDashboard = () => {
                   value={createForm.isbn}
                   onChange={(e) => setCreateForm({ ...createForm, isbn: e.target.value })}
                 />
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  placeholder="Total Quantity"
+                  className="border border-gray-300 rounded-md px-3 py-2"
+                  value={createForm.totalQuantity}
+                  onChange={(e) => setCreateForm({ ...createForm, totalQuantity: e.target.value })}
+                />
                 <button
                   type="submit"
                   className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
@@ -496,100 +614,6 @@ const AdminDashboard = () => {
               </form>
             </div>
           </div>
-
-          {/* Books Table */}
-          <div className="bg-white shadow rounded-lg mt-8">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Books</h3>
-                <button onClick={fetchBooks} className="text-sm bg-gray-100 border px-3 py-1 rounded hover:bg-gray-200">Refresh</button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ISBN</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Available</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                      <th className="px-4 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {books.map((b) => (
-                      <tr key={b._id}>
-                        <td className="px-4 py-2 whitespace-nowrap">{b.title}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{b.author}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{b.isbn}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{b.availability ? 'Yes' : 'No'}</td>
-                        <td className="px-4 py-2 whitespace-nowrap">{b.dueDate ? new Date(b.dueDate).toLocaleDateString() : '-'}</td>
-                        <td className="px-4 py-2 whitespace-nowrap text-right space-x-2">
-                          <button
-                            className="text-blue-600 hover:underline"
-                            onClick={() => startEdit(b)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="text-red-600 hover:underline"
-                            onClick={() => handleDelete(b._id)}
-                          >
-                            Delete
-                          </button>
-                          {!b.availability && (
-                            <button
-                              className="ml-2 text-emerald-700 hover:underline"
-                              onClick={() => returnBook(b._id)}
-                            >
-                              Return
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {books.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center text-gray-500">No books found.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-          {/* Inline Edit Panel */}
-          {editRow && (
-            <div className="bg-white shadow rounded-lg mt-6">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Edit Book Status</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                  <label className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={editRow.availability}
-                      onChange={(e) => setEditRow({ ...editRow, availability: e.target.checked })}
-                    />
-                    <span>Available</span>
-                  </label>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Due Date</label>
-                    <input
-                      type="date"
-                      className="border border-gray-300 rounded-md px-3 py-2"
-                      value={editRow.dueDate}
-                      onChange={(e) => setEditRow({ ...editRow, dueDate: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex space-x-2">
-                    <button onClick={saveEdit} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Save</button>
-                    <button onClick={cancelEdit} className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300">Cancel</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>

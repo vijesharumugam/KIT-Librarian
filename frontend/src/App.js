@@ -3,6 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminBooks from './pages/AdminBooks';
+import AdminStudents from './pages/AdminStudents';
+import BooksIssued from './pages/BooksIssued';
+import BooksOverdue from './pages/BooksOverdue';
 import StudentLogin from './pages/StudentLogin';
 import StudentRegister from './pages/StudentRegister';
 import StudentDashboard from './pages/StudentDashboard';
@@ -70,6 +74,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/books" element={<AdminBooks />} />
+        <Route path="/admin/dashboard/students" element={<AdminStudents />} />
+        <Route path="/admin/dashboard/books-issued" element={<BooksIssued />} />
+        <Route path="/admin/dashboard/books-overdue" element={<BooksOverdue />} />
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
