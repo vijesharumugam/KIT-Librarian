@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Academic serif font */
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700;900&display=swap');
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -14,4 +17,141 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Theme variables */
+:root {
+  /* gradient background */
+  --kit-bg-from: #4f46e5;   /* indigo-600 */
+  --kit-bg-via:  #7c3aed;   /* violet-600 */
+  --kit-bg-to:   #ec4899;   /* pink-500 */
+
+  /* glass surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.10);
+  --glass-border: rgba(255, 255, 255, 0.20);
+
+  /* buttons */
+  --btn-red-from:   #f43f5e; /* rose-500 */
+  --btn-red-to:     #ef4444; /* red-500 */
+  --btn-green-from: #10b981; /* emerald-500 */
+  --btn-green-to:   #22c55e; /* green-500 */
+  --btn-blue-from:  #6366f1; /* indigo-500 */
+  --btn-blue-to:    #3b82f6; /* blue-500 */
+}
+
+/* Example alternate theme - apply on <html data-theme="ocean"> */
+[data-theme="ocean"] {
+  --kit-bg-from: #0ea5e9;   /* sky-500 */
+  --kit-bg-via:  #2563eb;   /* blue-600 */
+  --kit-bg-to:   #7c3aed;   /* violet-600 */
+
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.24);
+
+  --btn-red-from:   #f97316; /* orange-500 */
+  --btn-red-to:     #ef4444; /* red-500 */
+  --btn-green-from: #14b8a6; /* teal-500 */
+  --btn-green-to:   #10b981; /* emerald-500 */
+  --btn-blue-from:  #3b82f6; /* blue-500 */
+  --btn-blue-to:    #06b6d4; /* cyan-500 */
+}
+
+/* Simple fade-in utilities for landing animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@layer utilities {
+  .animate-fade-in { animation: fade-in 0.7s ease-out both; }
+  .animate-fade-in-up { animation: fade-in-up 0.8s ease-out both; }
+
+  /* Academic serif utility */
+  .font-serif-academic { font-family: 'Merriweather', Georgia, serif; }
+
+  /* Library themed background: warm gradient + subtle pattern (books, lamps hints) */
+  .lib-bg {
+    background-color: #f3efe7;
+    background-image:
+      radial-gradient(circle at 10% 10%, rgba(184, 167, 132, 0.12) 0 8%, transparent 9%),
+      radial-gradient(circle at 80% 20%, rgba(146, 180, 167, 0.12) 0 8%, transparent 9%),
+      radial-gradient(circle at 20% 80%, rgba(199, 156, 112, 0.10) 0 8%, transparent 9%),
+      linear-gradient(180deg, rgba(243, 239, 231, 0.9), rgba(240, 233, 219, 0.9));
+  }
+
+  /* Banner underline reminiscent of classic library ribbon */
+  .banner-underline {
+    position: relative;
+  }
+  .banner-underline::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -10px;
+    width: min(520px, 90%);
+    height: 6px;
+    background: linear-gradient(90deg, #a3753b, #c99a5b, #a3753b);
+    border-radius: 9999px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  }
+
+  /* Book page-like card */
+  .book-card {
+    background: #fcfaf5;
+    border: 1px solid #e9e2d3;
+    box-shadow: 0 10px 30px rgba(67, 56, 28, 0.08);
+    position: relative;
+  }
+  .book-card::before,
+  .book-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+  /* subtle open-book edges */
+  .book-card::before { box-shadow: inset 12px 0 20px -12px rgba(0,0,0,0.08), inset -12px 0 20px -12px rgba(0,0,0,0.08); }
+  .book-card::after { border: 1px dashed rgba(163, 117, 59, 0.18); }
+
+  /* Bookmark style button (blue) */
+  .bookmark-btn {
+    --bookmark-from: #3b82f6; /* blue-500 */
+    --bookmark-to: #1d4ed8;   /* blue-700 */
+    position: relative;
+    background-image: linear-gradient(180deg, var(--bookmark-from), var(--bookmark-to));
+    color: #fff;
+    border-radius: 9999px;
+    padding: 0.875rem 2.5rem;
+    box-shadow: 0 10px 20px rgba(29, 78, 216, 0.25);
+  }
+  .bookmark-btn::before {
+    /* notch */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 12px;
+    background: rgba(255,255,255,0.35);
+    filter: blur(6px);
+    border-radius: 0 0 9999px 9999px;
+  }
+  .bookmark-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 26px rgba(29, 78, 216, 0.32); }
+  .bookmark-btn:active { transform: translateY(0); }
+
+  /* Wooden bookshelf footer */
+  .shelf-bg {
+    background-image:
+      repeating-linear-gradient(90deg, #8b5e34 0 14px, #8f653c 14px 28px, #7a512a 28px 42px, #915f34 42px 56px),
+      linear-gradient(#6b4423, #7a4a24);
+    background-blend-mode: overlay;
+  }
 }

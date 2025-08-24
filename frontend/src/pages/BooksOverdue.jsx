@@ -105,6 +105,7 @@ const BooksOverdue = () => {
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Title</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Register No</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                       <th className="px-4 py-2"></th>
@@ -115,6 +116,7 @@ const BooksOverdue = () => {
                       <tr key={it._id} className="bg-red-50">
                         <td className="px-4 py-2 whitespace-nowrap text-red-700">{it.book?.title || '-'}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-red-700">{it.student?.registerNumber || '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-red-700">{it.student?.name || '-'}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-red-700">{it.student?.phoneNumber || '-'}</td>
                         <td className="px-4 py-2 whitespace-nowrap text-red-700">{it.dueDate ? new Date(it.dueDate).toLocaleDateString() : '-'}</td>
                         <td className="px-4 py-2 text-right">
@@ -130,7 +132,7 @@ const BooksOverdue = () => {
                     ))}
                     {filtered.length === 0 && !loading && (
                       <tr>
-                        <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No overdue books.</td>
+                        <td colSpan={6} className="px-4 py-6 text-center text-gray-500">No overdue books.</td>
                       </tr>
                     )}
                   </tbody>

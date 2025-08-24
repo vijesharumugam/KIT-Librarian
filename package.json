@@ -25,6 +25,8 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
-    "cookie-parser": "^1.4.7"
+    "cookie-parser": "^1.4.7",
+    "multer": "^2.0.2",
+    "xlsx": "^0.18.5"
   }
 }

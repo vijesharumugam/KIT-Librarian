@@ -91,13 +91,13 @@ const AdminStudents = () => {
 
           <div className="bg-white shadow rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              {/* Search bar */}
+              {/* Search bar - updated placeholder to reflect searching by name as well */}
               <div className="flex items-center justify-end mb-4">
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by register number or phone number..."
+                  placeholder="Search by name, register number, or phone number..."
                   className="w-full sm:w-80 md:w-96 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
@@ -107,6 +107,7 @@ const AdminStudents = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Register Number</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Books Borrowed</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Overdue Books</th>
@@ -116,6 +117,7 @@ const AdminStudents = () => {
                     {pageItems.map((s) => (
                       <tr key={s._id || s.registerNumber}>
                         <td className="px-4 py-2 whitespace-nowrap">{s.registerNumber}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{s.name}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{s.phoneNumber}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{s.booksBorrowedCount ?? 0}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{s.overdueBooksCount ?? 0}</td>
@@ -123,7 +125,7 @@ const AdminStudents = () => {
                     ))}
                     {students.length === 0 && !loading && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No students found.</td>
+                        <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No students found.</td>
                       </tr>
                     )}
                   </tbody>

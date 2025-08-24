@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -21,6 +22,11 @@ const AdminDashboard = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [searchTerm, setSearchTerm] = useState('');
+  // Upload modal state
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [toast, setToast] = useState('');
 
   // Pagination memo
   const filteredBooks = useMemo(() => {
@@ -418,6 +424,30 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </Link>
+              {/* Add Multiple Books card */}
+              <button
+                type="button"
+                onClick={() => setShowUploadModal(true)}
+                className="block w-full text-left bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <div className="p-5">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-indigo-600 rounded-md flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-5 w-0 flex-1">
+                      <dl>
+                        <dt className="text-sm font-medium text-gray-500 truncate">Add Multiple Books</dt>
+                        <dd className="text-sm text-gray-700">Upload .xlsx or .csv</dd>
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              </button>
             </aside>
 
             {/* Right: Books content */}
@@ -539,6 +569,85 @@ const AdminDashboard = () => {
 
         </div>
       </main>
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => { if (!uploadLoading) setShowUploadModal(false); }}></div>
+          <div className="relative z-50 w-full max-w-md mx-auto bg-white rounded-lg shadow-lg">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Add Multiple Books</h3>
+              <p className="mt-1 text-sm text-gray-600">Upload an Excel (.xlsx) or CSV file containing columns: title, author, isbn, quantity. Other columns will be ignored.</p>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <input
+                type="file"
+                accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/csv,application/vnd.ms-excel"
+                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                className="w-full text-sm"
+                disabled={uploadLoading}
+              />
+              {uploadFile && (
+                <div className="text-xs text-gray-600">Selected: {uploadFile.name}</div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t flex justify-end gap-2">
+              <button
+                onClick={() => setShowUploadModal(false)}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                disabled={uploadLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!uploadFile) {
+                    setError('Please select a file to upload');
+                    return;
+                  }
+                  try {
+                    setUploadLoading(true);
+                    setError('');
+                    const token = localStorage.getItem('adminToken');
+                    const formData = new FormData();
+                    formData.append('file', uploadFile);
+                    const res = await axios.post('/api/admin/books/upload', formData, {
+                      headers: {
+                        'Content-Type': 'multipart/form-data',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                    });
+                    const data = res.data || {};
+                    setToast(`Upload successful: inserted ${data.inserted || 0}, updated ${data.updated || 0}`);
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                    // Refresh lists and stats
+                    fetchBooks();
+                    fetchStats();
+                    setTimeout(() => setToast(''), 1500);
+                  } catch (e) {
+                    const msg = e?.response?.data?.message || e.message || 'Upload failed';
+                    setError(msg);
+                  } finally {
+                    setUploadLoading(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                disabled={uploadLoading || !uploadFile}
+              >
+                {uploadLoading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[60]">
+          <div className="bg-emerald-600 text-white text-sm px-4 py-2 rounded shadow-lg">
+            {toast}
+          </div>
+        </div>
+      )}
       {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-40 flex items-center justify-center">

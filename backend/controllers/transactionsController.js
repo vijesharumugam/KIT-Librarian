@@ -107,13 +107,13 @@ async function listIssued(req, res) {
   try {
     const txs = await Transaction.find({ returnDate: null })
       .populate({ path: 'bookId', select: 'title' })
-      .populate({ path: 'studentId', select: 'registerNumber' })
+      .populate({ path: 'studentId', select: 'registerNumber name' })
       .sort({ issueDate: -1 })
       .lean();
     const items = txs.map((t) => ({
       _id: t._id,
       book: t.bookId ? { _id: t.bookId._id, title: t.bookId.title } : null,
-      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber } : null,
+      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber, name: t.studentId.name } : null,
       dueDate: t.dueDate,
       issueDate: t.issueDate,
     }));
@@ -174,13 +174,13 @@ async function listOverdue(req, res) {
     const now = new Date();
     const txs = await Transaction.find({ returnDate: null, dueDate: { $lt: now } })
       .populate({ path: 'bookId', select: 'title' })
-      .populate({ path: 'studentId', select: 'registerNumber phoneNumber' })
+      .populate({ path: 'studentId', select: 'registerNumber phoneNumber name' })
       .sort({ dueDate: 1 })
       .lean();
     const items = txs.map((t) => ({
       _id: t._id,
       book: t.bookId ? { _id: t.bookId._id, title: t.bookId.title } : null,
-      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber, phoneNumber: t.studentId.phoneNumber } : null,
+      student: t.studentId ? { _id: t.studentId._id, registerNumber: t.studentId.registerNumber, name: t.studentId.name, phoneNumber: t.studentId.phoneNumber } : null,
       dueDate: t.dueDate,
       issueDate: t.issueDate,
     }));

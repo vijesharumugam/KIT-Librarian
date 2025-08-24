@@ -135,6 +135,7 @@ const BooksIssued = () => {
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Title</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Register No</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                       <th className="px-4 py-2"></th>
                     </tr>
@@ -144,6 +145,7 @@ const BooksIssued = () => {
                       <tr key={it._id}>
                         <td className="px-4 py-2 whitespace-nowrap">{it.book?.title || '-'}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{it.student?.registerNumber || '-'}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">{it.student?.name || '-'}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{it.dueDate ? new Date(it.dueDate).toLocaleDateString() : '-'}</td>
                         <td className="px-4 py-2 text-right">
                           <button
@@ -158,7 +160,7 @@ const BooksIssued = () => {
                     ))}
                     {filtered.length === 0 && !loading && (
                       <tr>
-                        <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No issued books.</td>
+                        <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No issued books.</td>
                       </tr>
                     )}
                   </tbody>

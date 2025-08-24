@@ -132,4 +132,59 @@ module.exports = {
       return res.status(500).json({ message: 'Server error' });
     }
   },
+  // GET /api/student/profile (protected)
+  async getProfile(req, res) {
+    try {
+      const studentId = req.student?._id || null;
+      if (!studentId) return res.status(401).json({ message: 'Unauthorized' });
+      const student = await Student.findById(studentId).lean();
+      if (!student) return res.status(404).json({ message: 'Student not found' });
+      return res.json({
+        id: student._id,
+        registerNumber: student.registerNumber,
+        name: student.name,
+        department: student.department,
+        phoneNumber: student.phoneNumber,
+        createdAt: student.createdAt,
+        updatedAt: student.updatedAt,
+      });
+    } catch (e) {
+      console.error('Get profile error:', e);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  },
+  // PUT /api/student/profile (protected)
+  // Body: { name?, department?, phoneNumber? }
+  async updateProfile(req, res) {
+    try {
+      const studentId = req.student?._id || null;
+      if (!studentId) return res.status(401).json({ message: 'Unauthorized' });
+      const allowed = {};
+      const { name, department, phoneNumber } = req.body || {};
+      if (typeof name === 'string') allowed.name = name.trim();
+      if (typeof department === 'string') allowed.department = department.trim();
+      if (typeof phoneNumber === 'string') allowed.phoneNumber = phoneNumber.trim();
+      // Prevent empty strings
+      for (const [k, v] of Object.entries(allowed)) {
+        if (v === '') delete allowed[k];
+      }
+      if (Object.keys(allowed).length === 0) {
+        return res.status(400).json({ message: 'No valid fields to update' });
+      }
+      const updated = await Student.findByIdAndUpdate(studentId, { $set: allowed }, { new: true, runValidators: true }).lean();
+      if (!updated) return res.status(404).json({ message: 'Student not found' });
+      return res.json({
+        message: 'Profile updated',
+        id: updated._id,
+        registerNumber: updated.registerNumber,
+        name: updated.name,
+        department: updated.department,
+        phoneNumber: updated.phoneNumber,
+        updatedAt: updated.updatedAt,
+      });
+    } catch (e) {
+      console.error('Update profile error:', e);
+      return res.status(500).json({ message: 'Server error' });
+    }
+  },
 };

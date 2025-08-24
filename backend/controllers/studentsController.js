@@ -2,8 +2,8 @@ const Student = require('../models/Student');
 const Transaction = require('../models/Transaction');
 
 // GET /api/students
-// Optional: ?search=term (matches registerNumber or phoneNumber, case-insensitive)
-// Returns: registerNumber, phoneNumber, booksBorrowedCount, overdueBooksCount
+// Optional: ?search=term (matches name, registerNumber or phoneNumber, case-insensitive)
+// Returns: name, registerNumber, phoneNumber, booksBorrowedCount, overdueBooksCount
 const listStudents = async (req, res) => {
   try {
     const { search } = req.query;
@@ -11,12 +11,13 @@ const listStudents = async (req, res) => {
     if (search && String(search).trim() !== '') {
       const s = String(search).trim();
       query.$or = [
+        { name: { $regex: s, $options: 'i' } },
         { registerNumber: { $regex: s, $options: 'i' } },
         { phoneNumber: { $regex: s, $options: 'i' } },
       ];
     }
 
-    const students = await Student.find(query, { registerNumber: 1, phoneNumber: 1, currentBooks: 1 })
+    const students = await Student.find(query, { name: 1, registerNumber: 1, phoneNumber: 1, currentBooks: 1 })
       .sort({ registerNumber: 1 })
       .lean();
 
@@ -31,6 +32,7 @@ const listStudents = async (req, res) => {
       });
       return {
         _id: s._id,
+        name: s.name,
         registerNumber: s.registerNumber,
         phoneNumber: s.phoneNumber,
         booksBorrowedCount,

@@ -1,4 +1,5 @@
 const Book = require('../models/Book');
+const Transaction = require('../models/Transaction');
 
 // GET /api/books - list books, supports optional ?search=term (title or author)
 const getBooks = async (req, res) => {
@@ -128,3 +129,48 @@ module.exports = {
   updateBook,
   deleteBook,
 };
+
+// GET /api/books/recent?limit=8
+async function getRecentBooks(req, res) {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 8, 50));
+    const books = await Book.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+    return res.json(books);
+  } catch (err) {
+    console.error('Get recent books error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// GET /api/books/popular?limit=8
+// Ranks books by number of transactions (all-time). Falls back to recent if no transactions.
+async function getPopularBooks(req, res) {
+  try {
+    const limit = Math.max(1, Math.min(Number(req.query.limit) || 8, 50));
+    const top = await Transaction.aggregate([
+      { $group: { _id: '$bookId', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: limit },
+    ]);
+
+    if (!top.length) {
+      const fallback = await Book.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+      return res.json(fallback);
+    }
+
+    const ids = top.map((t) => t._id).filter(Boolean);
+    const books = await Book.find({ _id: { $in: ids } }).lean();
+    // Preserve ranking order
+    const byId = new Map(books.map((b) => [String(b._id), b]));
+    const ranked = top
+      .map((t) => byId.get(String(t._id)))
+      .filter(Boolean);
+    return res.json(ranked);
+  } catch (err) {
+    console.error('Get popular books error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+}
+
+module.exports.getRecentBooks = getRecentBooks;
+module.exports.getPopularBooks = getPopularBooks;
