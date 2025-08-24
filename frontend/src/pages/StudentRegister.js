@@ -52,14 +52,15 @@ const StudentRegister = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Student Registration</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">Create your account to access the dashboard</p>
+    <div className="min-h-screen font-sans lib-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <h2 className="text-3xl sm:text-4xl font-serif-academic font-extrabold text-gold-700">Student Registration</h2>
+        <p className="mt-2 text-sm text-stone-700">Create your account to access the dashboard</p>
+        <div className="divider-gold mt-4" />
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="book-card border-gold bg-white/95 py-8 px-4 sm:rounded-lg sm:px-10">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-4">{error}</div>
           )}
@@ -69,7 +70,7 @@ const StudentRegister = () => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-stone-700">Name</label>
               <input
                 id="name"
                 name="name"
@@ -77,13 +78,13 @@ const StudentRegister = () => {
                 required
                 value={form.name}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 sm:text-sm"
                 placeholder="e.g., John Doe"
               />
             </div>
 
             <div>
-              <label htmlFor="department" className="block text-sm font-medium text-gray-700">Department</label>
+              <label htmlFor="department" className="block text-sm font-medium text-stone-700">Department</label>
               <input
                 id="department"
                 name="department"
@@ -91,12 +92,12 @@ const StudentRegister = () => {
                 required
                 value={form.department}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 sm:text-sm"
                 placeholder="e.g., Artificial Intelligence and Data Science"
               />
             </div>
             <div>
-              <label htmlFor="registerNumber" className="block text-sm font-medium text-gray-700">Register Number</label>
+              <label htmlFor="registerNumber" className="block text-sm font-medium text-stone-700">Register Number</label>
               <input
                 id="registerNumber"
                 name="registerNumber"
@@ -104,13 +105,13 @@ const StudentRegister = () => {
                 required
                 value={form.registerNumber}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 sm:text-sm"
                 placeholder="e.g., REG0001"
               />
             </div>
 
             <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <label htmlFor="phoneNumber" className="block text-sm font-medium text-stone-700">Phone Number</label>
               <input
                 id="phoneNumber"
                 name="phoneNumber"
@@ -118,13 +119,13 @@ const StudentRegister = () => {
                 required
                 value={form.phoneNumber}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 sm:text-sm"
                 placeholder="e.g., +911234567890"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-stone-700">Password</label>
               <input
                 id="password"
                 name="password"
@@ -132,13 +133,13 @@ const StudentRegister = () => {
                 required
                 value={form.password}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                className="mt-1 block w-full px-3 py-2 border border-stone-300 rounded-md shadow-sm bg-white text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-500 sm:text-sm"
                 placeholder="Minimum 8 characters"
                 minLength={8}
               />
             </div>
 
-            <button type="submit" disabled={loading} className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full inline-flex justify-center items-center gap-2 rounded-md bg-emerald-700 px-4 py-2.5 font-medium text-emerald-50 shadow hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:opacity-60">
               {loading ? 'Registering...' : 'Register'}
             </button>
           </form>

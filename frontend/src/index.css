@@ -154,4 +154,20 @@ code {
       linear-gradient(#6b4423, #7a4a24);
     background-blend-mode: overlay;
   }
+
+  /* Gold accents */
+  .text-gold-700 { color: #b68c1f; }
+  .border-gold {
+    border: 1px solid rgba(182, 140, 31, 0.55);
+    box-shadow: 0 8px 24px rgba(67, 56, 28, 0.12);
+  }
+  .divider-gold {
+    height: 2px;
+    width: 100%;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+    background: linear-gradient(90deg, transparent, #cfa645, #b68c1f, #cfa645, transparent);
+    border-radius: 9999px;
+  }
 }

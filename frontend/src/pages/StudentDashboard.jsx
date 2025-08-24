@@ -121,10 +121,10 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-50 via-amber-50 to-stone-100">
+    <div className="min-h-screen lib-bg flex flex-col">
       {/* Top Navbar with subtle wood grain gradient */}
       <header className="relative overflow-hidden shadow">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-stone-800" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-800 to-stone-800" />
         {/* bookshelf pattern overlay using repeating linear gradients */}
         <div
           className="absolute inset-0 opacity-[0.15] mix-blend-overlay"
@@ -139,20 +139,20 @@ const StudentDashboard = () => {
               <img
                 src={logoUrl}
                 alt="Library Logo"
-                className="h-10 w-10 rounded-full bg-white/90 p-1 shadow ring-1 ring-emerald-300/30"
+                className="h-10 w-10 rounded-full bg-white/90 p-1 shadow ring-1 ring-amber-300/40"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <div className="text-emerald-50">
-                <h1 className="font-serif text-xl sm:text-2xl font-semibold tracking-wide">Student Dashboard</h1>
-                <p className="text-emerald-100/80 text-xs sm:text-sm">Search books and view your current reading</p>
+              <div className="text-amber-50">
+                <h1 className="font-serif-academic text-xl sm:text-2xl font-extrabold tracking-wide">Student Dashboard</h1>
+                <p className="text-amber-100/85 text-xs sm:text-sm">Search books and view your current reading</p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:ml-4">
               <Link
                 to="/student/profile"
-                className="group inline-flex items-center gap-2 rounded-md border border-emerald-300/30 bg-emerald-50/10 px-3 py-2 text-emerald-50 backdrop-blur hover:bg-emerald-50/20 transition text-sm w-full sm:w-auto justify-center"
+                className="group inline-flex items-center gap-2 rounded-md border border-amber-300/40 bg-amber-50/10 px-3 py-2 text-amber-50 backdrop-blur hover:bg-amber-50/20 transition text-sm w-full sm:w-auto justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90 group-hover:opacity-100">
                   <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z" />
@@ -161,7 +161,7 @@ const StudentDashboard = () => {
               </Link>
               <button
                 onClick={logout}
-                className="group inline-flex items-center gap-2 rounded-md border border-emerald-300/30 bg-emerald-50/10 px-3 py-2 text-emerald-50 backdrop-blur hover:bg-emerald-50/20 transition text-sm w-full sm:w-auto justify-center"
+                className="group inline-flex items-center gap-2 rounded-md border border-amber-300/40 bg-amber-50/10 px-3 py-2 text-amber-50 backdrop-blur hover:bg-amber-50/20 transition text-sm w-full sm:w-auto justify-center"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90 group-hover:opacity-100">
                   <path d="M16 17v-2h-4v-2h4V11l3 3-3 3z" />
@@ -174,7 +174,7 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-5 sm:py-8 flex-1 w-full">
         {error && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
@@ -183,11 +183,10 @@ const StudentDashboard = () => {
         )}
 
         {/* Search Section */}
-        <section className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
-          {/* parchment-like top strip */}
+        <section className="book-card border-gold rounded-2xl bg-white/95 shadow-sm">
           <div className="h-2 w-full bg-gradient-to-r from-amber-200 via-amber-100 to-amber-200" />
           <div className="p-4 sm:p-6">
-            <h2 className="mb-3 text-lg font-semibold text-stone-800 sm:text-xl">Search Books</h2>
+            <h2 className="mb-3 text-lg sm:text-xl font-serif-academic font-extrabold text-gold-700">Search Books</h2>
             <form onSubmit={search} className="flex flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <span className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-stone-400">
@@ -235,7 +234,10 @@ const StudentDashboard = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="truncate font-medium text-stone-900">{b.title}</div>
-                          <div className="truncate text-sm text-stone-600">{b.author} · ISBN {b.isbn}</div>
+                          <div className="truncate text-sm text-stone-600">
+                            {b.author}
+                            <span className="hidden sm:inline"> · ISBN {b.isbn}</span>
+                          </div>
                         </div>
                       </div>
                       <span className={`whitespace-nowrap rounded px-2 py-1 text-sm ${b.availability ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'}`}>
@@ -251,10 +253,10 @@ const StudentDashboard = () => {
 
         {/* Current Reading */}
         <section className="mt-6 sm:mt-8">
-          <div className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/90 shadow-sm">
+          <div className="book-card border-gold rounded-2xl bg-white/95 shadow-sm">
             <div className="h-2 w-full bg-gradient-to-r from-stone-300 via-amber-200 to-stone-300" />
             <div className="p-4 sm:p-6">
-              <h2 className="mb-4 text-lg font-semibold text-stone-800 sm:text-xl">Current Reading</h2>
+              <h2 className="mb-4 text-lg sm:text-xl font-serif-academic font-extrabold text-gold-700">Current Reading</h2>
               {current.length === 0 ? (
                 <div className="flex items-center gap-3 rounded-md border border-stone-200 bg-stone-50 px-4 py-6 text-stone-600">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6 text-stone-400">
@@ -280,7 +282,10 @@ const StudentDashboard = () => {
                         </div>
                         <div className="min-w-0">
                           <div className="truncate font-semibold text-stone-900">{c.title || 'Unknown title'}</div>
-                          <div className="truncate text-sm text-stone-600">{c.author} · ISBN {c.isbn}</div>
+                          <div className="truncate text-sm text-stone-600">
+                            {c.author}
+                            <span className="hidden sm:inline"> · ISBN {c.isbn}</span>
+                          </div>
                           {c.dueDate && (
                             <div className="mt-1 text-xs text-stone-500">Due: {new Date(c.dueDate).toLocaleDateString()}</div>
                           )}
@@ -296,11 +301,11 @@ const StudentDashboard = () => {
 
         {/* Recently Added */}
         <section className="mt-6 sm:mt-10">
-          <div className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/90 shadow-sm">
+          <div className="book-card border-gold rounded-2xl bg-white/95 shadow-sm">
             <div className="h-2 w-full bg-gradient-to-r from-amber-200 via-emerald-200 to-stone-300" />
             <div className="p-4 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-800 sm:text-xl">Recently Added</h2>
+                <h2 className="text-lg sm:text-xl font-serif-academic font-extrabold text-gold-700">Recently Added</h2>
                 <Link to="/books" className="text-sm font-medium text-emerald-700 hover:text-emerald-800">View all</Link>
               </div>
               {discLoading && recent.length === 0 ? (
@@ -339,11 +344,11 @@ const StudentDashboard = () => {
 
         {/* Popular Books */}
         <section className="mt-6 sm:mt-10 mb-6 sm:mb-10">
-          <div className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/90 shadow-sm">
+          <div className="book-card border-gold rounded-2xl bg-white/95 shadow-sm">
             <div className="h-2 w-full bg-gradient-to-r from-stone-300 via-amber-200 to-emerald-200" />
             <div className="p-4 sm:p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-stone-800 sm:text-xl">Popular Books</h2>
+                <h2 className="text-lg sm:text-xl font-serif-academic font-extrabold text-gold-700">Popular Books</h2>
                 <Link to="/books" className="text-sm font-medium text-emerald-700 hover:text-emerald-800">View all</Link>
               </div>
               {discLoading && popular.length === 0 ? (
@@ -380,6 +385,10 @@ const StudentDashboard = () => {
           </div>
         </section>
       </main>
+
+      <footer className="mt-auto">
+        <div className="shelf-bg h-16 md:h-20 w-full" />
+      </footer>
     </div>
   );
 };

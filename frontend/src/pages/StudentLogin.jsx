@@ -41,15 +41,15 @@ const StudentLogin = () => {
   // OTP flow removed; password-based login with HttpOnly cookie is used instead.
 
   return (
-    <div className="min-h-screen font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-50 via-amber-50 to-stone-100 flex flex-col justify-center py-10 px-4">
+    <div className="min-h-screen font-sans lib-bg flex flex-col justify-center py-10 px-4">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <h2 className="text-3xl sm:text-4xl font-serif font-semibold tracking-wide text-stone-800">Student Login</h2>
-        <p className="mt-2 text-sm text-stone-600">Enter your Register Number and Password</p>
+        <h2 className="text-3xl sm:text-4xl font-serif-academic font-extrabold tracking-wide text-gold-700">Student Login</h2>
+        <p className="mt-2 text-sm text-stone-700">Enter your Register Number and Password</p>
+        <div className="divider-gold mt-4" />
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/90 shadow-sm">
-          <div className="h-2 w-full bg-gradient-to-r from-amber-200 via-amber-100 to-emerald-100" />
+        <div className="book-card rounded-xl border-gold bg-white/95">
           <div className="py-6 px-4 sm:px-8">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-4">{error}</div>

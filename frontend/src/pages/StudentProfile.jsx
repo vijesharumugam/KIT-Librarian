@@ -77,15 +77,15 @@ const StudentProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-50 via-amber-50 to-stone-100">
+    <div className="min-h-screen lib-bg flex flex-col">
       <header className="relative overflow-hidden shadow">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-800 to-stone-800" />
-        <div className="relative container mx-auto px-4 py-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-800 to-stone-800" />
+        <div className="relative container mx-auto px-3 sm:px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-emerald-50 text-xl sm:text-2xl font-semibold">Student Profile</h1>
+            <h1 className="text-amber-50 font-serif-academic text-xl sm:text-2xl font-extrabold tracking-wide">Student Profile</h1>
             <button
               onClick={() => navigate(-1)}
-              className="rounded-md border border-emerald-300/30 bg-emerald-50/10 px-3 py-2 text-emerald-50 hover:bg-emerald-50/20"
+              className="rounded-md border border-amber-300/40 bg-amber-50/10 px-2.5 py-1.5 sm:px-3 sm:py-2 text-amber-50 text-sm sm:text-base backdrop-blur hover:bg-amber-50/20"
             >
               Back
             </button>
@@ -93,7 +93,7 @@ const StudentProfile = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8">
+      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 flex-1 w-full">
         {error && (
           <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
         )}
@@ -101,7 +101,7 @@ const StudentProfile = () => {
           <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</div>
         )}
 
-        <div className="relative overflow-hidden rounded-2xl border border-stone-200/70 bg-white/90 shadow-sm">
+        <div className="relative overflow-hidden book-card rounded-2xl border-gold bg-white/95 shadow-sm max-w-2xl mx-auto">
           <div className="h-2 w-full bg-gradient-to-r from-amber-200 via-amber-100 to-emerald-100" />
           {/* Edit button (view mode) */}
           {!isEditing && (
@@ -178,6 +178,9 @@ const StudentProfile = () => {
           </form>
         </div>
       </main>
+      <footer className="mt-auto">
+        <div className="shelf-bg h-16 md:h-20 w-full" />
+      </footer>
     </div>
   );
 };
