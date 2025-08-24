@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 const BooksPage = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   const fetchBooks = async () => {
     try {
@@ -24,6 +25,16 @@ const BooksPage = () => {
     fetchBooks();
   }, []);
 
+  // Filter books in real-time by title or author (case-insensitive)
+  const filteredBooks = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return books;
+    return books.filter((b) =>
+      (b.title || '').toLowerCase().includes(q) ||
+      (b.author || '').toLowerCase().includes(q)
+    );
+  }, [books, search]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-indigo-600 text-white shadow">
@@ -41,23 +52,34 @@ const BooksPage = () => {
           <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md text-sm mb-4">Loading...</div>
         )}
 
+        {/* Search bar */}
+        <div className="mb-6 flex justify-center">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title or author..."
+            className="w-full sm:w-96 border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {books.map((book) => (
+          {filteredBooks.map((book) => (
             <div key={book._id} className="bg-white rounded-lg shadow p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">{book.title}</h2>
-                  <p className="text-gray-600">By {book.author}</p>
+                  <h2 className="text-xl font-semibold text-gray-900">{book.title}</h2>
+                  <p className="text-sm text-gray-600">{book.author}</p>
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${book.availability ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                  {book.availability ? 'Available' : 'Not available'}
+                <span
+                  className={`text-xs px-2 py-1 rounded font-medium whitespace-nowrap ${book.availability ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+                >
+                  {book.availability ? 'Available' : 'Not Available'}
                 </span>
               </div>
-              <div className="mt-3 text-sm text-gray-700">ISBN: {book.isbn}</div>
-              <div className="mt-1 text-sm text-gray-700">Due: {book.dueDate ? new Date(book.dueDate).toLocaleDateString() : '-'}</div>
             </div>
           ))}
-          {books.length === 0 && !loading && !error && (
+          {filteredBooks.length === 0 && !loading && !error && (
             <div className="col-span-full text-center text-gray-500">No books found.</div>
           )}
         </div>

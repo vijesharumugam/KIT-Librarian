@@ -26,12 +26,14 @@ const borrowBook = async (req, res) => {
       dueDate: new Date(dueDate),
     });
 
-    // Update student and book: store only Book ObjectId in student's currentBooks
-    student.currentBooks.push(book._id);
-    // Maintain persistent counters
-    student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) + 1);
-    // We don't increment overdue here; that flips when dueDate passes
-    await student.save();
+    // Update student (atomic) without triggering full validation
+    await Student.updateOne(
+      { _id: student._id },
+      {
+        $push: { currentBooks: book._id },
+        $inc: { booksBorrowedCount: 1 },
+      }
+    );
 
     book.issuedCount = (book.issuedCount || 0) + 1;
     const newRemaining = (book.totalQuantity || 0) - (book.issuedCount || 0);
@@ -78,19 +80,17 @@ const returnBook = async (req, res) => {
       await book.save();
     }
 
-    // Update student
-    const student = await Student.findById(tx.studentId);
-    if (student) {
-      student.currentBooks = (student.currentBooks || []).filter(
-        (cb) => cb.toString() !== tx.bookId.toString()
-      );
-      // Decrement counters
-      student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) - 1);
-      if (tx.dueDate && new Date(tx.dueDate) < new Date()) {
-        student.overdueBooksCount = Math.max(0, (student.overdueBooksCount || 0) - 1);
+    // Update student (atomic): remove book from currentBooks and decrement counters
+    const decOverdue = tx.dueDate && new Date(tx.dueDate) < new Date();
+    const incObj = { booksBorrowedCount: -1 };
+    if (decOverdue) incObj.overdueBooksCount = -1;
+    await Student.updateOne(
+      { _id: tx.studentId },
+      {
+        $pull: { currentBooks: tx.bookId },
+        $inc: incObj,
       }
-      await student.save();
-    }
+    );
 
     return res.json({ message: 'Book returned', transaction: tx });
   } catch (err) {
@@ -145,19 +145,17 @@ async function returnById(req, res) {
       await book.save();
     }
 
-    // Update student: remove book from currentBooks
-    const student = await Student.findById(tx.studentId);
-    if (student) {
-      student.currentBooks = (student.currentBooks || []).filter(
-        (cb) => cb.toString() !== tx.bookId.toString()
-      );
-      // Decrement counters
-      student.booksBorrowedCount = Math.max(0, (student.booksBorrowedCount || 0) - 1);
-      if (tx.dueDate && new Date(tx.dueDate) < new Date()) {
-        student.overdueBooksCount = Math.max(0, (student.overdueBooksCount || 0) - 1);
+    // Update student (atomic): remove book and decrement counters
+    const decOverdue2 = tx.dueDate && new Date(tx.dueDate) < new Date();
+    const incObj2 = { booksBorrowedCount: -1 };
+    if (decOverdue2) incObj2.overdueBooksCount = -1;
+    await Student.updateOne(
+      { _id: tx.studentId },
+      {
+        $pull: { currentBooks: tx.bookId },
+        $inc: incObj2,
       }
-      await student.save();
-    }
+    );
 
     return res.json({ message: 'Book returned', transaction: tx });
   } catch (err) {

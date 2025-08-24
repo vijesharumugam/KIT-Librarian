@@ -107,14 +107,19 @@ const generateStudents = () => {
   const students = [];
   const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emily', 'Robert', 'Lisa', 'William', 'Mary', 'James', 'Jennifer', 'Christopher', 'Patricia', 'Daniel', 'Linda', 'Matthew', 'Elizabeth', 'Anthony', 'Barbara'];
   const lastNames = ['Smith', 'Johnson', 'Brown', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Martinez', 'Garcia', 'Rodriguez', 'Miller', 'Moore', 'Jackson', 'White', 'Harris', 'Clark', 'Lewis', 'Walker', 'Hall', 'Young'];
+  const departments = ['Artificial Intelligence and Data Science', 'Computer Science and Engineering', 'Electronics and Communication Engineering', 'Mechanical Engineering'];
   
   for (let i = 1; i <= 50; i++) {
     const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
     const registerNumber = `REG${String(i).padStart(4, '0')}`;
     const phoneNumber = `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`;
+    const name = `${firstName} ${lastName}`;
+    const department = departments[Math.floor(Math.random() * departments.length)];
     
     students.push({
+      name,
+      department,
       registerNumber,
       phoneNumber,
       // default password (will be hashed before insert)

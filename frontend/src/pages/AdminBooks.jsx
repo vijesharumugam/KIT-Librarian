@@ -9,7 +9,29 @@ const AdminBooks = () => {
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState({ title: '', author: '', isbn: '', quantity: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState('');
   const navigate = useNavigate();
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ _id: '', title: '', author: '', totalQuantity: 1 });
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const res = await fetch('http://localhost:5000/api/books');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
+      setBooks(data || []);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
@@ -19,22 +41,55 @@ const AdminBooks = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const res = await fetch('http://localhost:5000/api/books');
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
-        setBooks(data || []);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBooks();
   }, []);
+
+  // Edit handlers
+  const startEdit = (book) => {
+    setEditForm({
+      _id: book._id,
+      title: book.title || '',
+      author: book.author || '',
+      totalQuantity: Number(book.totalQuantity) || 1,
+    });
+    setShowEditModal(true);
+  };
+
+  const cancelEdit = () => {
+    setShowEditModal(false);
+    setEditForm({ _id: '', title: '', author: '', totalQuantity: 1 });
+  };
+
+  const saveEdit = async () => {
+    if (!editForm._id) return;
+    const title = editForm.title.trim();
+    const author = editForm.author.trim();
+    const qtyNum = parseInt(editForm.totalQuantity, 10);
+    if (!title || !author || Number.isNaN(qtyNum) || qtyNum <= 0) return;
+    try {
+      setSubmitting(true);
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch(`http://localhost:5000/api/books/${editForm._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ title, author, totalQuantity: qtyNum }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || 'Failed to update book');
+      setToast('Book updated');
+      setShowEditModal(false);
+      setEditForm({ _id: '', title: '', author: '', totalQuantity: 1 });
+      await fetchBooks();
+      setTimeout(() => setToast(''), 1000);
+    } catch (e) {
+      setError(e.message || 'Something went wrong while updating');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Filter books locally by title or author (case-insensitive)
   const normalized = searchTerm.trim().toLowerCase();
@@ -99,11 +154,23 @@ const AdminBooks = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th colSpan={6} className="px-4 py-3 text-left">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddModal(true)}
+                          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                          Add Book
+                        </button>
+                      </th>
+                    </tr>
+                    <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Quantity</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issued Count</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -114,11 +181,22 @@ const AdminBooks = () => {
                         <td className="px-4 py-2 whitespace-nowrap">{b.totalQuantity ?? 0}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{b.issuedCount ?? 0}</td>
                         <td className="px-4 py-2 whitespace-nowrap">{(b.totalQuantity ?? 0) - (b.issuedCount ?? 0)}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-right">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(b)}
+                            className="p-1 rounded text-gray-600 hover:text-indigo-600 hover:bg-gray-100"
+                            title="Edit"
+                            aria-label="Edit"
+                          >
+                            <span role="img" aria-hidden="true">✏️</span>
+                          </button>
+                        </td>
                       </tr>
                     ))}
                     {filteredBooks.length === 0 && !loading && (
                       <tr>
-                        <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No books found.</td>
+                        <td colSpan={6} className="px-4 py-6 text-center text-gray-500">No books found.</td>
                       </tr>
                     )}
                   </tbody>
@@ -153,6 +231,195 @@ const AdminBooks = () => {
           </div>
         </div>
       </main>
+      {/* Add Book Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setShowAddModal(false)}
+          />
+          {/* Modal content */}
+          <div className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add Book</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                <input
+                  type="text"
+                  value={form.author}
+                  onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter author"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                <input
+                  type="text"
+                  value={form.isbn}
+                  onChange={(e) => setForm((f) => ({ ...f, isbn: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter ISBN"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.quantity}
+                  onChange={(e) => setForm((f) => ({ ...f, quantity: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter quantity"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50"
+                onClick={() => setShowAddModal(false)}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                disabled={submitting}
+                onClick={async () => {
+                  // Validate
+                  const title = form.title.trim();
+                  const author = form.author.trim();
+                  const isbn = form.isbn.trim();
+                  const quantityNum = Number(form.quantity);
+                  if (!title || !author || !isbn || Number.isNaN(quantityNum) || quantityNum < 0) {
+                    alert('Please fill all fields correctly.');
+                    return;
+                  }
+                  try {
+                    setSubmitting(true);
+                    const token = localStorage.getItem('adminToken');
+                    const res = await fetch('http://localhost:5000/api/books', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                      },
+                      body: JSON.stringify({ title, author, isbn, totalQuantity: quantityNum }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.message || 'Failed to add book');
+                    setToast('Book added successfully');
+                    setShowAddModal(false);
+                    setForm({ title: '', author: '', isbn: '', quantity: '' });
+                    await fetchBooks();
+                    setTimeout(() => setToast(''), 1000);
+                  } catch (e) {
+                    alert(e.message || 'Something went wrong');
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+              >
+                {submitting ? 'Adding...' : 'Add'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Edit Book Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={cancelEdit} />
+          {/* Modal content */}
+          <div
+            className="relative z-10 w-full max-w-md rounded-lg bg-white p-6 shadow-lg"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                saveEdit();
+              }
+            }}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Book</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Author</label>
+                <input
+                  type="text"
+                  value={editForm.author}
+                  onChange={(e) => setEditForm((f) => ({ ...f, author: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter author"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Total Quantity</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editForm.totalQuantity}
+                  onChange={(e) => setEditForm((f) => ({ ...f, totalQuantity: e.target.value }))}
+                  className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Enter quantity"
+                />
+                {(!editForm.totalQuantity || parseInt(editForm.totalQuantity, 10) <= 0) && (
+                  <p className="mt-1 text-xs text-red-600">Quantity must be a positive integer</p>
+                )}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md border bg-white text-gray-700 hover:bg-gray-50"
+                onClick={cancelEdit}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                onClick={saveEdit}
+                disabled={(() => { const t=editForm.title.trim(); const a=editForm.author.trim(); const q=parseInt(editForm.totalQuantity,10); return submitting || !t || !a || Number.isNaN(q) || q<=0; })()}
+              >
+                {submitting ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[60]">
+          <div className="bg-emerald-600 text-white text-sm px-4 py-2 rounded shadow-lg">
+            {toast}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

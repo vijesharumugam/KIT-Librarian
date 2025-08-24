@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const StudentRegister = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ registerNumber: '', phoneNumber: '', password: '' });
+  const [form, setForm] = useState({ registerNumber: '', phoneNumber: '', password: '', name: '', department: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -20,6 +20,10 @@ const StudentRegister = () => {
     setError('');
     setSuccess('');
     try {
+      if (!form.name.trim() || !form.department.trim()) {
+        setError('Name and Department are required');
+        return;
+      }
       const res = await fetch('http://localhost:5000/api/student/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -28,6 +32,8 @@ const StudentRegister = () => {
           registerNumber: form.registerNumber.trim(),
           phoneNumber: form.phoneNumber.trim(),
           password: form.password,
+          name: form.name.trim(),
+          department: form.department.trim(),
         }),
       });
       const data = await res.json();
@@ -62,6 +68,33 @@ const StudentRegister = () => {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
+                value={form.name}
+                onChange={handleChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                placeholder="e.g., John Doe"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="department" className="block text-sm font-medium text-gray-700">Department</label>
+              <input
+                id="department"
+                name="department"
+                type="text"
+                required
+                value={form.department}
+                onChange={handleChange}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-600 focus:border-emerald-600 sm:text-sm"
+                placeholder="e.g., Artificial Intelligence and Data Science"
+              />
+            </div>
             <div>
               <label htmlFor="registerNumber" className="block text-sm font-medium text-gray-700">Register Number</label>
               <input

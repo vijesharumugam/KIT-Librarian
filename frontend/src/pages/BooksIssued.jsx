@@ -6,6 +6,11 @@ const BooksIssued = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Confirm modal state
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingReturnId, setPendingReturnId] = useState(null);
+  // Toast state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,8 +47,6 @@ const BooksIssued = () => {
   });
 
   const returnTx = async (id) => {
-    const confirm = window.confirm('Mark this book as returned?');
-    if (!confirm) return;
     try {
       setLoading(true);
       setError('');
@@ -56,13 +59,37 @@ const BooksIssued = () => {
       if (!res.ok) throw new Error(data.message || 'Failed to return book');
       // Refresh list
       await fetchIssued();
-      // Optional toast
-      if (window?.alert) window.alert('Book returned successfully');
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Toast helpers
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast((t) => ({ ...t, show: false })), 2000);
+  };
+
+  // Click handlers
+  const onClickReturn = (id) => {
+    setPendingReturnId(id);
+    setShowConfirm(true);
+  };
+
+  const onConfirmReturn = async () => {
+    const id = pendingReturnId;
+    setShowConfirm(false);
+    setPendingReturnId(null);
+    await returnTx(id);
+    showToast('Book marked as returned', 'success');
+  };
+
+  const onCancelReturn = () => {
+    setShowConfirm(false);
+    setPendingReturnId(null);
+    showToast('Book not marked as returned', 'info');
   };
 
   return (
@@ -120,7 +147,7 @@ const BooksIssued = () => {
                         <td className="px-4 py-2 whitespace-nowrap">{it.dueDate ? new Date(it.dueDate).toLocaleDateString() : '-'}</td>
                         <td className="px-4 py-2 text-right">
                           <button
-                            onClick={() => returnTx(it._id)}
+                            onClick={() => onClickReturn(it._id)}
                             className="px-3 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700"
                             disabled={loading}
                           >
@@ -141,6 +168,38 @@ const BooksIssued = () => {
           </div>
         </div>
       </main>
+    {/* Toast */}
+    {toast.show && (
+      <div className="fixed top-4 right-4 z-50">
+        <div
+          className={`px-4 py-2 rounded shadow text-white ${
+            toast.type === 'success' ? 'bg-emerald-600' : 'bg-blue-600'
+          }`}
+        >
+          {toast.message}
+        </div>
+      </div>
+    )}
+
+    {/* Confirm Modal */}
+    {showConfirm && (
+      <div className="fixed inset-0 z-40 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black bg-opacity-40" onClick={onCancelReturn}></div>
+        <div className="relative z-50 w-full max-w-sm mx-auto bg-white rounded-lg shadow-lg">
+          <div className="px-6 py-4 border-b">
+            <h3 className="text-lg font-semibold text-gray-900">Confirm</h3>
+          </div>
+          <div className="px-6 py-5">
+            <p className="text-gray-700">Do you want to return this book?</p>
+          </div>
+          <div className="px-6 py-4 border-t flex justify-end gap-2">
+            <button onClick={onCancelReturn} className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+            <button onClick={onConfirmReturn} className="px-4 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700">OK</button>
+          </div>
+        </div>
+      </div>
+    )}
+
     </div>
   );
 };

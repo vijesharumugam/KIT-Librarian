@@ -2,12 +2,15 @@ const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
 
 // POST /api/student/register
-// Body: { registerNumber, phoneNumber, password }
+// Body: { registerNumber, phoneNumber, password, name, department }
 async function registerStudent(req, res) {
   try {
-    const { registerNumber, phoneNumber, password } = req.body;
-    if (!registerNumber || !phoneNumber || !password) {
-      return res.status(400).json({ message: 'registerNumber, phoneNumber and password are required' });
+    const { registerNumber, phoneNumber, password, name, department } = req.body;
+    if (!registerNumber || !phoneNumber || !password || !name || !department) {
+      return res.status(400).json({ message: 'registerNumber, phoneNumber, password, name and department are required' });
+    }
+    if (String(name).trim() === '' || String(department).trim() === '') {
+      return res.status(400).json({ message: 'name and department cannot be empty' });
     }
 
     const exists = await Student.findOne({ registerNumber });
@@ -15,7 +18,7 @@ async function registerStudent(req, res) {
       return res.status(409).json({ message: 'registerNumber already exists' });
     }
 
-    const student = new Student({ registerNumber, phoneNumber, password, currentBooks: [] });
+    const student = new Student({ registerNumber, phoneNumber, password, name: String(name).trim(), department: String(department).trim(), currentBooks: [] });
     await student.save(); // password hashed via pre-save hook
 
     const token = jwt.sign(
@@ -31,7 +34,14 @@ async function registerStudent(req, res) {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    return res.status(201).json({ message: 'Student registered successfully' });
+    // Return created student's public info
+    return res.status(201).json({
+      message: 'Student registered successfully',
+      id: student._id,
+      registerNumber: student.registerNumber,
+      name: student.name,
+      department: student.department,
+    });
   } catch (error) {
     console.error('Register student error:', error);
     return res.status(500).json({ message: 'Server error' });
