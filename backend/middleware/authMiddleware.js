@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 const Student = require('../models/Student');
+const { config } = require('../config/env');
+const { verifyAccess } = require('../utils/jwt');
 
 // Admin auth (backward compatible default export)
 const authMiddleware = async (req, res, next) => {
@@ -11,7 +13,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = verifyAccess(token);
     const admin = await Admin.findById(decoded.id).select('-password');
     
     if (!admin) {
@@ -31,7 +33,7 @@ async function verifyStudent(req, res, next) {
     const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.studentToken;
     if (!token) return res.status(401).json({ message: 'No token provided' });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = verifyAccess(token);
     if (!decoded || decoded.role !== 'student') {
       return res.status(401).json({ message: 'Invalid token' });
     }

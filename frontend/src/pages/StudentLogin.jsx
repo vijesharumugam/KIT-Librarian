@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import FloatingDecor from '../components/FloatingDecor';
 
 const StudentLogin = () => {
   const navigate = useNavigate();
@@ -43,9 +44,10 @@ const StudentLogin = () => {
   // OTP flow removed; password-based login with HttpOnly cookie is used instead.
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col relative">
+      <FloatingDecor />
       {/* Global Header */}
-      <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+      <header className="relative z-10 w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
           <img src={logoUrl} alt="Logo" className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
           <div className="min-w-0">
@@ -91,7 +93,7 @@ const StudentLogin = () => {
         </section>
 
         {/* Right: Login Card */}
-        <section className="flex-1 w-full flex items-center justify-center px-4 sm:px-6 py-8 md:py-12">
+        <section className="relative z-10 flex-1 w-full flex items-center justify-center px-4 sm:px-6 py-8 md:py-12">
           <div className="w-full max-w-md md:max-w-lg space-y-6">
             <div>
               <h2 className="text-2xl sm:text-3xl font-extrabold">Student Login</h2>

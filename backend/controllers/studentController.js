@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
+const { config } = require('../config/env');
+const { signAccess } = require('../utils/jwt');
 
 // POST /api/student/register
-// Body: { registerNumber, phoneNumber, password, name, department }
+// Body: { registerNumber, phoneNumber, password, name, department, email? }
 async function registerStudent(req, res) {
   try {
-    const { registerNumber, phoneNumber, password, name, department } = req.body;
+    const { registerNumber, phoneNumber, password, name, department, email } = req.body;
     if (!registerNumber || !phoneNumber || !password || !name || !department) {
       return res.status(400).json({ message: 'registerNumber, phoneNumber, password, name and department are required' });
     }
@@ -13,23 +15,29 @@ async function registerStudent(req, res) {
       return res.status(400).json({ message: 'name and department cannot be empty' });
     }
 
+    let normalizedEmail = null;
+    if (typeof email === 'string' && email.trim() !== '') {
+      const e = email.trim().toLowerCase();
+      const ok = /.+@.+\..+/.test(e);
+      if (!ok) {
+        return res.status(400).json({ message: 'Invalid email format' });
+      }
+      normalizedEmail = e;
+    }
+
     const exists = await Student.findOne({ registerNumber });
     if (exists) {
       return res.status(409).json({ message: 'registerNumber already exists' });
     }
 
-    const student = new Student({ registerNumber, phoneNumber, password, name: String(name).trim(), department: String(department).trim(), currentBooks: [] });
+    const student = new Student({ registerNumber, phoneNumber, password, name: String(name).trim(), department: String(department).trim(), email: normalizedEmail, currentBooks: [] });
     await student.save(); // password hashed via pre-save hook
 
-    const token = jwt.sign(
-      { id: student._id, registerNumber: student.registerNumber, role: 'student' },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const token = signAccess({ id: student._id, registerNumber: student.registerNumber, role: 'student' });
 
     res.cookie('studentToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -41,6 +49,7 @@ async function registerStudent(req, res) {
       registerNumber: student.registerNumber,
       name: student.name,
       department: student.department,
+      email: student.email,
     });
   } catch (error) {
     console.error('Register student error:', error);
@@ -67,15 +76,11 @@ async function loginStudent(req, res) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const token = jwt.sign(
-      { id: student._id, registerNumber: student.registerNumber, role: 'student' },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const token = signAccess({ id: student._id, registerNumber: student.registerNumber, role: 'student' });
 
     res.cookie('studentToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: config.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
@@ -145,6 +150,7 @@ module.exports = {
         name: student.name,
         department: student.department,
         phoneNumber: student.phoneNumber,
+        email: student.email ?? null,
         createdAt: student.createdAt,
         updatedAt: student.updatedAt,
       });
@@ -154,16 +160,28 @@ module.exports = {
     }
   },
   // PUT /api/student/profile (protected)
-  // Body: { name?, department?, phoneNumber? }
+  // Body: { name?, department?, phoneNumber?, email? }
   async updateProfile(req, res) {
     try {
       const studentId = req.student?._id || null;
       if (!studentId) return res.status(401).json({ message: 'Unauthorized' });
       const allowed = {};
-      const { name, department, phoneNumber } = req.body || {};
+      const { name, department, phoneNumber, email } = req.body || {};
       if (typeof name === 'string') allowed.name = name.trim();
       if (typeof department === 'string') allowed.department = department.trim();
       if (typeof phoneNumber === 'string') allowed.phoneNumber = phoneNumber.trim();
+      if (typeof email === 'string') {
+        const val = email.trim();
+        if (val !== '') {
+          const e = val.toLowerCase();
+          const ok = /.+@.+\..+/.test(e);
+          if (!ok) return res.status(400).json({ message: 'Invalid email format' });
+          allowed.email = e;
+        } else {
+          // allow clearing email explicitly
+          allowed.email = null;
+        }
+      }
       // Prevent empty strings
       for (const [k, v] of Object.entries(allowed)) {
         if (v === '') delete allowed[k];
@@ -180,6 +198,7 @@ module.exports = {
         name: updated.name,
         department: updated.department,
         phoneNumber: updated.phoneNumber,
+        email: updated.email ?? null,
         updatedAt: updated.updatedAt,
       });
     } catch (e) {

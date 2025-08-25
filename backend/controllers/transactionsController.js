@@ -1,6 +1,7 @@
 const Transaction = require('../models/Transaction');
 const Student = require('../models/Student');
 const Book = require('../models/Book');
+const { sendMail } = require('../utils/mailer');
 
 // POST /api/transactions/borrow
 // Body: { registerNumber, bookId, dueDate }
@@ -40,6 +41,42 @@ const borrowBook = async (req, res) => {
     book.availability = newRemaining > 0;
     // Do not set book.dueDate; due dates tracked per transaction
     await book.save();
+
+    // Send confirmation email (non-blocking behavior guarded with try/catch)
+    try {
+      if (student.email) {
+        const due = new Date(tx.dueDate);
+        const subject = `Book borrowed: ${book.title}`;
+        const text = [
+          `Hello ${student.name},`,
+          '',
+          `You have borrowed the following book from the library:`,
+          `- Title: ${book.title}`,
+          book.author ? `- Author: ${book.author}` : null,
+          book.isbn ? `- ISBN: ${book.isbn}` : null,
+          `- Due Date: ${due.toDateString()}`,
+          '',
+          'Please return the book by the due date to avoid fines.',
+          '',
+          '— Kit Librarian'
+        ].filter(Boolean).join('\n');
+        const html = `
+          <p>Hello ${student.name},</p>
+          <p>You have borrowed the following book from the library:</p>
+          <ul>
+            <li><strong>Title:</strong> ${book.title}</li>
+            ${book.author ? `<li><strong>Author:</strong> ${book.author}</li>` : ''}
+            ${book.isbn ? `<li><strong>ISBN:</strong> ${book.isbn}</li>` : ''}
+            <li><strong>Due Date:</strong> ${due.toDateString()}</li>
+          </ul>
+          <p>Please return the book by the due date to avoid fines.</p>
+          <p>— Kit Librarian</p>
+        `;
+        await sendMail({ to: student.email, subject, text, html });
+      }
+    } catch (e) {
+      console.warn('Borrow email failed:', e?.message || e);
+    }
 
     return res.status(201).json({ message: 'Book issued', transaction: tx });
   } catch (err) {
@@ -91,6 +128,49 @@ const returnBook = async (req, res) => {
         $inc: incObj,
       }
     );
+
+    // Send return email (non-blocking)
+    try {
+      const student = await Student.findById(tx.studentId).select('name email').lean();
+      if (student && student.email) {
+        const due = tx.dueDate ? new Date(tx.dueDate) : null;
+        const returned = tx.returnDate ? new Date(tx.returnDate) : new Date();
+        const isOverdue = due && returned > due;
+        const subject = isOverdue
+          ? `Returned (overdue): ${book ? book.title : 'Book'}`
+          : `Thanks for returning: ${book ? book.title : 'Book'}`;
+        const lines = [];
+        lines.push(`Hello ${student.name},`);
+        lines.push('');
+        if (book) {
+          lines.push(`Thank you for returning "${book.title}"${book.author ? ` by ${book.author}` : ''}.`);
+        } else {
+          lines.push('Thank you for returning your borrowed book.');
+        }
+        if (due) lines.push(`Due Date: ${due.toDateString()}`);
+        lines.push(`Returned On: ${returned.toDateString()}`);
+        if (isOverdue) {
+          lines.push('');
+          lines.push('Please try to return books by the due date next time to avoid overdue status.');
+        }
+        lines.push('');
+        lines.push('— Kit Librarian');
+        const text = lines.join('\n');
+        const html = `
+          <p>Hello ${student.name},</p>
+          <p>${book ? `Thank you for returning "${book.title}"${book.author ? ` by ${book.author}` : ''}.` : 'Thank you for returning your borrowed book.'}</p>
+          <ul>
+            ${due ? `<li><strong>Due Date:</strong> ${due.toDateString()}</li>` : ''}
+            <li><strong>Returned On:</strong> ${returned.toDateString()}</li>
+          </ul>
+          ${isOverdue ? '<p>Please try to return books by the due date next time to avoid overdue status.</p>' : ''}
+          <p>— Kit Librarian</p>
+        `;
+        await sendMail({ to: student.email, subject, text, html });
+      }
+    } catch (mailErr) {
+      console.warn('Return email failed:', mailErr?.message || mailErr);
+    }
 
     return res.json({ message: 'Book returned', transaction: tx });
   } catch (err) {
@@ -156,6 +236,49 @@ async function returnById(req, res) {
         $inc: incObj2,
       }
     );
+
+    // Send return email (non-blocking)
+    try {
+      const student = await Student.findById(tx.studentId).select('name email').lean();
+      if (student && student.email) {
+        const due = tx.dueDate ? new Date(tx.dueDate) : null;
+        const returned = tx.returnDate ? new Date(tx.returnDate) : new Date();
+        const isOverdue = due && returned > due;
+        const subject = isOverdue
+          ? `Returned (overdue): ${book ? book.title : 'Book'}`
+          : `Thanks for returning: ${book ? book.title : 'Book'}`;
+        const lines = [];
+        lines.push(`Hello ${student.name},`);
+        lines.push('');
+        if (book) {
+          lines.push(`Thank you for returning "${book.title}"${book.author ? ` by ${book.author}` : ''}.`);
+        } else {
+          lines.push('Thank you for returning your borrowed book.');
+        }
+        if (due) lines.push(`Due Date: ${due.toDateString()}`);
+        lines.push(`Returned On: ${returned.toDateString()}`);
+        if (isOverdue) {
+          lines.push('');
+          lines.push('Please try to return books by the due date next time to avoid overdue status.');
+        }
+        lines.push('');
+        lines.push('— Kit Librarian');
+        const text = lines.join('\n');
+        const html = `
+          <p>Hello ${student.name},</p>
+          <p>${book ? `Thank you for returning "${book.title}"${book.author ? ` by ${book.author}` : ''}.` : 'Thank you for returning your borrowed book.'}</p>
+          <ul>
+            ${due ? `<li><strong>Due Date:</strong> ${due.toDateString()}</li>` : ''}
+            <li><strong>Returned On:</strong> ${returned.toDateString()}</li>
+          </ul>
+          ${isOverdue ? '<p>Please try to return books by the due date next time to avoid overdue status.</p>' : ''}
+          <p>— Kit Librarian</p>
+        `;
+        await sendMail({ to: student.email, subject, text, html });
+      }
+    } catch (mailErr) {
+      console.warn('Return-by-id email failed:', mailErr?.message || mailErr);
+    }
 
     return res.json({ message: 'Book returned', transaction: tx });
   } catch (err) {

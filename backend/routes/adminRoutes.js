@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { loginAdmin, getStats } = require('../controllers/adminController');
+const { loginAdmin, getStats, runNotifications, previewNotification } = require('../controllers/adminController');
 const authMiddleware = require('../middleware/authMiddleware');
 const { uploadBooksFromExcel } = require('../controllers/adminBooksUploadController');
 
@@ -32,5 +32,11 @@ const upload = multer({
 
 // POST /api/admin/books/upload
 router.post('/books/upload', authMiddleware, upload.single('file'), uploadBooksFromExcel);
+
+// POST /api/admin/notifications/run (manual trigger)
+router.post('/notifications/run', authMiddleware, runNotifications);
+
+// GET /api/admin/notifications/preview?studentId=...
+router.get('/notifications/preview', authMiddleware, previewNotification);
 
 module.exports = router;

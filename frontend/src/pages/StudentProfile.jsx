@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import FloatingDecor from '../components/FloatingDecor';
 
 const StudentProfile = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', department: '', phoneNumber: '' });
+  const [form, setForm] = useState({ name: '', department: '', phoneNumber: '', email: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [initial, setInitial] = useState({ name: '', department: '', phoneNumber: '' });
+  const [initial, setInitial] = useState({ name: '', department: '', phoneNumber: '', email: '' });
 
   const loadProfile = async () => {
     try {
@@ -26,6 +27,7 @@ const StudentProfile = () => {
         name: data.name || '',
         department: data.department || '',
         phoneNumber: data.phoneNumber || '',
+        email: data.email ?? '',
       };
       setForm(next);
       setInitial(next);
@@ -65,6 +67,7 @@ const StudentProfile = () => {
         name: data.name || form.name,
         department: data.department || form.department,
         phoneNumber: data.phoneNumber || form.phoneNumber,
+        email: data.email ?? '',
       };
       setForm(updated);
       setInitial(updated);
@@ -79,7 +82,8 @@ const StudentProfile = () => {
   const logoUrl = `${process.env.PUBLIC_URL}/images/logo.png`;
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col relative">
+      <FloatingDecor />
       {/* Global Header */}
       <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
@@ -146,6 +150,21 @@ const StudentProfile = () => {
                 className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 ${isEditing ? 'border-white/10 bg-slate-800' : 'border-white/10 bg-slate-900/40 cursor-default'}`}
                 placeholder="Department"
               />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-300 mb-1">Email (for notifications)</label>
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={onChange}
+                disabled={!isEditing}
+                className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 ${isEditing ? 'border-white/10 bg-slate-800' : 'border-white/10 bg-slate-900/40 cursor-default'}`}
+                placeholder="student@example.com"
+              />
+              {!isEditing && !form.email && (
+                <p className="mt-1 text-xs text-slate-400">No email set. Add one to receive due date reminders.</p>
+              )}
             </div>
             <div>
               <label className="block text-sm text-slate-300 mb-1">Phone Number</label>

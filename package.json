@@ -10,7 +10,9 @@
     "client": "cd frontend && npm start",
     "install-server": "cd backend && npm install",
     "install-client": "cd frontend && npm install",
-    "install-all": "npm run install-server && npm run install-client"
+    "install-all": "npm run install-server && npm run install-client",
+    "prepare": "husky install",
+    "scan:secrets": "node scripts/scan-secrets.js"
   },
   "keywords": [
     "mern",
@@ -22,7 +24,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.3"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

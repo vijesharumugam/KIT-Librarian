@@ -4,14 +4,15 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const https = require('https');
 require('dotenv').config({ override: true });
+const { config, maskMongoUri } = require('./config/env');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = config.PORT;
 
 // Middleware
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  origin: config.CLIENT_ORIGIN,
   credentials: true,
 }));
 app.use(express.json());
@@ -113,15 +114,7 @@ async function buildSeedlistFromSrv(srvUri) {
 const connectDB = async () => {
   try {
     // Prefer Atlas when MONGODB_URI is provided; fallback to local only if not set
-    const defaultLocal = 'mongodb://127.0.0.1:27017/kit-librarian';
-    const rawEnvUri = process.env.MONGODB_URI && String(process.env.MONGODB_URI).trim();
-    // Sanitize common accidental concatenations such as '...appName=...NODE_ENV=development'
-    let envUri = rawEnvUri;
-    if (rawEnvUri && /NODE_ENV\s*=/.test(rawEnvUri)) {
-      envUri = rawEnvUri.split(/NODE_ENV\s*=/)[0].trim();
-      console.warn('[DB] Detected extra content appended to MONGODB_URI (e.g., NODE_ENV=...). Sanitized URI for connection. Please fix your environment variable.');
-    }
-    let mongoUri = envUri || defaultLocal;
+    let mongoUri = config.MONGODB_URI;
     // If SRV is used, convert to seedlist via DoH to avoid local SRV DNS dependency
     if (mongoUri && /^mongodb\+srv:/i.test(mongoUri)) {
       console.warn('[DB] SRV URI detected. Resolving via DNS-over-HTTPS to build a seedlist URI...');
@@ -133,12 +126,12 @@ const connectDB = async () => {
         throw e;
       }
     }
-    if (!envUri) {
+    if (!process.env.MONGODB_URI) {
       console.warn('[DB] MONGODB_URI not set. Falling back to local MongoDB at 127.0.0.1:27017/kit-librarian');
     }
 
     // Mask credentials in logs
-    const masked = mongoUri.replace(/:\/\/([^:@]+):([^@]+)@/,'://$1:****@');
+    const masked = maskMongoUri(mongoUri);
     console.log(`[DB] Connecting to: ${masked}`);
 
     await mongoose.connect(mongoUri, {
@@ -179,6 +172,22 @@ app.use('/api/books', booksRoutes);
 app.use('/api/transactions', transactionsRoutes);
 // Simple students list route (admin only)
 app.get('/api/students', authMiddleware, studentsController.listStudents);
+
+// Start retention/anonymization scheduler
+try {
+  const { startRetentionScheduler } = require('./jobs/retentionJob');
+  startRetentionScheduler();
+} catch (e) {
+  console.warn('[Retention] Scheduler not started:', e?.message || e);
+}
+
+// Start notifications scheduler (due/overdue email reminders)
+try {
+  const { startNotificationsScheduler } = require('./jobs/notificationsJob');
+  startNotificationsScheduler();
+} catch (e) {
+  console.warn('[Notifications] Scheduler not started:', e?.message || e);
+}
 
 // Start server
 app.listen(PORT, () => {

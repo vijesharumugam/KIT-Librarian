@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const https = require('https');
 require('dotenv').config({ override: true });
+const { config, maskMongoUri } = require('./env');
 
 function dohQuery(name, type) {
   const url = `https://1.1.1.1/dns-query?name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`;
@@ -85,20 +86,13 @@ async function buildSeedlistFromSrv(srvUri) {
 
 const connectDB = async () => {
   try {
-    const defaultLocal = 'mongodb://127.0.0.1:27017/kit-librarian';
-    const rawEnvUri = process.env.MONGODB_URI && String(process.env.MONGODB_URI).trim();
-    let envUri = rawEnvUri;
-    if (rawEnvUri && /NODE_ENV\s*=/.test(rawEnvUri)) {
-      envUri = rawEnvUri.split(/NODE_ENV\s*=/)[0].trim();
-      console.warn('[DB] Detected extra content appended to MONGODB_URI (e.g., NODE_ENV=...). Sanitized URI for connection. Please fix your environment variable.');
-    }
-    let mongoUri = envUri || defaultLocal;
+    let mongoUri = config.MONGODB_URI;
     if (mongoUri && /^mongodb\+srv:/i.test(mongoUri)) {
       console.warn('[DB] SRV URI detected. Resolving via DNS-over-HTTPS to build a seedlist URI...');
       mongoUri = await buildSeedlistFromSrv(mongoUri);
     }
     // Use database name from URI as-is; if none is specified, driver default will be used
-    console.log(`[DB] Connecting to: ${mongoUri.replace(/:\/\/([^:@]+):([^@]+)@/,'://$1:****@')}`);
+    console.log(`[DB] Connecting to: ${maskMongoUri(mongoUri)}`);
     const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

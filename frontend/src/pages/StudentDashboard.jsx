@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import FloatingDecor from '../components/FloatingDecor';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const StudentDashboard = () => {
   const [recent, setRecent] = useState([]);
   const [popular, setPopular] = useState([]);
   const [discLoading, setDiscLoading] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     // Ping current to check auth via cookie; redirect if unauthorized
@@ -121,9 +123,10 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col relative">
+      <FloatingDecor />
       {/* Global Header */}
-      <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+      <header className="relative z-10 w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img src={logoUrl} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
@@ -139,7 +142,7 @@ const StudentDashboard = () => {
               </svg>
               <span className="font-medium">Profile</span>
             </Link>
-            <button onClick={logout} className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
+            <button onClick={() => setShowLogoutModal(true)} className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
                 <path d="M16 17v-2h-4v-2h4V11l3 3-3 3z" />
                 <path d="M14 7V5H5v14h9v-2H7V7h7z" />
@@ -150,7 +153,7 @@ const StudentDashboard = () => {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-3 sm:px-6 py-6 sm:py-8 flex-1">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 py-6 sm:py-8 flex-1">
         {error && (
           <div className="mb-4 rounded-md border border-red-400/40 bg-red-900/20 px-4 py-3 text-sm text-red-200">{error}</div>
         )}
@@ -354,6 +357,29 @@ const StudentDashboard = () => {
           </div>
         </section>
       </main>
+
+      {/* Logout confirmation modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="glass-card w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl">
+            <div className="flex items-start gap-3">
+              <div className="rounded bg-rose-500/15 p-2 text-rose-300">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                  <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-slate-100">Confirm Logout</h3>
+                <p className="mt-1 text-sm text-slate-300">Are you sure you want to log out of your account?</p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setShowLogoutModal(false)} className="btn-muted px-4 py-2">Cancel</button>
+              <button onClick={logout} className="btn-primary-blue px-4 py-2">Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="mt-auto">
         <div className="w-full h-12" />

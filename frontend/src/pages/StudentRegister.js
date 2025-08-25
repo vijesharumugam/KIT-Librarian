@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import FloatingDecor from '../components/FloatingDecor';
 
 const StudentRegister = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ registerNumber: '', phoneNumber: '', password: '', name: '', department: '' });
+  const [form, setForm] = useState({ registerNumber: '', phoneNumber: '', password: '', name: '', department: '', email: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -36,6 +37,7 @@ const StudentRegister = () => {
           password: form.password,
           name: form.name.trim(),
           department: form.department.trim(),
+          email: form.email.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -54,9 +56,10 @@ const StudentRegister = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col relative">
+      <FloatingDecor />
       {/* Global Header */}
-      <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+      <header className="relative z-10 w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
           <img src={logoUrl} alt="Logo" className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
           <div className="min-w-0">
@@ -66,7 +69,7 @@ const StudentRegister = () => {
         </div>
       </header>
 
-      <main className="flex-1 w-full flex items-center justify-center px-4 sm:px-6 py-8 md:py-12">
+      <main className="relative z-10 flex-1 w-full flex items-center justify-center px-4 sm:px-6 py-8 md:py-12">
         <div className="w-full max-w-md md:max-w-lg space-y-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-extrabold">Create your account</h2>
@@ -107,6 +110,19 @@ const StudentRegister = () => {
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   placeholder="e.g., Artificial Intelligence and Data Science"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm text-slate-300">Email (for notifications)</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., student@example.com"
                 />
               </div>
 
