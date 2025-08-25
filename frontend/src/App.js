@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -15,85 +15,204 @@ import StudentDashboard from './pages/StudentDashboard';
 import StudentProfile from './pages/StudentProfile';
 import BooksPage from './pages/BooksPage';
 
-// Home component (library themed landing)
+// Home component (dark split-screen themed landing)
 const Home = () => {
-  // Place the provided logo at: frontend/public/images/logo.png
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ registerNumber: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError('');
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/student/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          registerNumber: form.registerNumber.trim(),
+          password: form.password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || 'Invalid credentials');
+        return;
+      }
+      navigate('/student/dashboard');
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   const logoUrl = `${process.env.PUBLIC_URL}/images/logo.png`;
   return (
-    <div className="min-h-screen font-sans lib-bg text-stone-800 flex flex-col">
-      {/* Header */}
-      <header className="relative overflow-hidden shadow">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-800 to-stone-800" />
-        <div className="relative container mx-auto px-3 sm:px-4 pt-6 pb-7">
-          <div className="flex items-center gap-4 mb-2">
-            <img
-              src={logoUrl}
-              alt="KIT Logo"
-              className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-white shadow ring-2 ring-amber-300/60 object-contain"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-            <div>
-              <h1 className="font-serif-academic text-xl sm:text-2xl md:text-3xl font-bold tracking-wide text-amber-100">
-                KIT - Kalaignarkarunanidhi Institute of Technology
-              </h1>
-              <p className="text-amber-50/90 text-xs sm:text-sm">An Autonomous Institution | Coimbatore - 641 402</p>
-              <p className="text-amber-50/95 text-xs sm:text-sm">Read • Research • Rise</p>
-            </div>
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+      {/* Global Header */}
+      <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
+          <img src={logoUrl} alt="Logo" className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
+          <div className="min-w-0">
+            <p className="text-slate-100 text-base sm:text-xl md:text-2xl font-bold tracking-wide whitespace-normal md:whitespace-nowrap break-words leading-snug">Kalaignarkarunanidhi Institute of Technology</p>
+            <p className="text-slate-300 text-xs sm:text-sm leading-tight">Read • Research • Rise</p>
           </div>
         </div>
       </header>
+      <div className="flex flex-1 flex-col lg:flex-row">
+        {/* Left: Brand + Quote */}
+        <section className="hidden lg:flex w-full lg:w-1/2 relative overflow-hidden items-center justify-center dark-grid">
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-600/10 via-indigo-500/5 to-transparent" />
+          {/* Decorative floating books */}
+          <div className="pointer-events-none absolute inset-0">
+            {/* top-left */}
+            <svg className="absolute left-10 top-16 h-10 w-10 text-indigo-300/20 float-slow delay-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M4 5.5a2 2 0 012-2h10.5v13H6a2 2 0 00-2 2V5.5z"/>
+              <path d="M6 3.5v13"/>
+              <path d="M8 6.5h7"/>
+              <path d="M8 9.5h7"/>
+            </svg>
+            {/* top-right */}
+            <svg className="absolute right-20 top-28 h-12 w-12 text-violet-300/20 float-medium delay-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M3.5 6l8.5-2.5L20.5 6v12l-8.5 2.5L3.5 18V6z"/>
+              <path d="M12 3.5v17"/>
+              <path d="M7 8h3"/>
+              <path d="M14 10h3"/>
+            </svg>
+            {/* bottom-left */}
+            <svg className="absolute left-24 bottom-24 h-12 w-12 text-pink-300/20 float-fast delay-1000" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M4 7.5l8-3 8 3v9l-8 3-8-3v-9z"/>
+              <path d="M12 4.5v12"/>
+              <path d="M7 10h10"/>
+            </svg>
+            {/* bottom-right */}
+            <svg className="absolute right-10 bottom-16 h-9 w-9 text-blue-300/20 float-slow delay-1500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M5 5.5h9a3 3 0 013 3v9H8a3 3 0 01-3-3v-9z"/>
+              <path d="M8 8.5h6"/>
+              <path d="M8 11.5h6"/>
+            </svg>
 
-      {/* Hero */}
-      <main className="container mx-auto px-3 sm:px-4 flex-1 flex items-center">
-        <section className="mx-auto max-w-5xl w-full my-6 sm:my-10">
-          <div className="book-card rounded-xl p-5 sm:p-8 md:p-10 text-center border-gold">
-            <h2 className="font-serif-academic text-2xl sm:text-3xl md:text-4xl font-extrabold text-gold-700">
-              Welcome to KIT's Library Assistant
-            </h2>
-            <p className="text-stone-700 mt-2 mb-5 md:mb-6 max-w-3xl mx-auto text-sm sm:text-base">
-              Manage books, track students, and streamline library operations with the elegance and precision of a master librarian.
-            </p>
+            {/* desk lamp silhouette */}
+            <svg className="absolute left-12 bottom-10 h-14 w-14 text-indigo-200/15 spin-very-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+              <path d="M6 19h12"/>
+              <path d="M10 19V9l4-4 2 2-3 3v9"/>
+              <path d="M14 7l4 4"/>
+              <circle cx="18" cy="11" r="1.5"/>
+            </svg>
 
-            <div className="divider-gold my-5" />
+            {/* bookmark */}
+            <svg className="absolute right-8 top-8 h-8 w-8 text-pink-200/20 float-medium" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M7 4h10a2 2 0 012 2v14l-7-4-7 4V6a2 2 0 012-2z"/>
+            </svg>
 
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 md:gap-6">
-              <Link
-                to="/student/login"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-6 py-2.5 font-medium text-emerald-50 shadow hover:bg-emerald-800 w-full sm:w-auto"
-              >
-                <span className="inline-block">✔</span> Login
-              </Link>
+            {/* quill */}
+            <svg className="absolute left-1/2 top-1/3 -translate-x-1/2 h-10 w-10 text-emerald-200/20 float-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
+              <path d="M20 4c-6 2-10 6-12 12l-2 4 4-2C16 16 20 12 22 6"/>
+              <path d="M4 20l4-4"/>
+            </svg>
 
-              <Link
-                to="/student/register"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-stone-300 bg-white px-6 py-2.5 font-medium text-stone-800 shadow hover:bg-stone-50 w-full sm:w-auto"
-              >
-                Sign Up
-              </Link>
+            {/* twinkling dots */}
+            <span className="absolute left-8 top-1/2 h-1.5 w-1.5 rounded-full bg-indigo-300/30 twinkle"></span>
+            <span className="absolute right-12 top-1/2 h-1.5 w-1.5 rounded-full bg-violet-300/30 twinkle-slow"></span>
+            <span className="absolute left-1/3 bottom-12 h-1.5 w-1.5 rounded-full bg-blue-300/30 twinkle"></span>
+          </div>
+          <div className="relative w-full max-w-4xl px-10 py-16 text-center">
+            {/* soft glow behind headline */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-8 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+            <h1 className="mt-2 text-3xl xl:text-4xl font-extrabold tracking-tight text-indigo-400">KIT Library</h1>
+            <p className="mt-2 text-slate-300 text-base md:text-lg">Your Journey to Knowledge Excellence</p>
+
+            <blockquote className="mt-10 p-6 rounded-xl glass-card text-left">
+              <p className="text-slate-200 leading-relaxed">
+                “The best way to predict the future is to create it. We are not just teaching code — we're shaping the next generation of innovators.”
+              </p>
+              <footer className="mt-4 text-sm text-slate-400">— Library Team</footer>
+            </blockquote>
+          </div>
+        </section>
+
+        {/* Right: Auth Card */}
+        <section className="flex-1 w-full flex items-center justify-center px-4 sm:px-6 py-8 md:py-12">
+          <div className="w-full max-w-md md:max-w-lg space-y-6">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold">Welcome Back!</h2>
+              <p className="mt-2 text-sm text-slate-400">Sign in to continue your library journey with KIT.</p>
             </div>
 
-            <div className="mt-4 flex items-center justify-center">
-              <Link
-                to="/books"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-amber-700/40 bg-white px-6 py-2.5 font-medium text-stone-800 shadow hover:bg-stone-50"
-              >
-                <span className="text-lg">📚</span> View Books Collection
+            <div className="glass-card p-6 rounded-xl border border-white/10 shadow-xl bg-slate-900/50">
+              {error && (
+                <div className="mb-4 rounded-md border border-red-400/40 bg-red-900/20 px-3 py-2 text-sm text-red-200">{error}</div>
+              )}
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="registerNumber" className="block text-sm text-slate-300">Register Number</label>
+                <input
+                  id="registerNumber"
+                  name="registerNumber"
+                  type="text"
+                  value={form.registerNumber}
+                  onChange={handleChange}
+                  placeholder="Enter your register number"
+                  className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
+                />
+
+                <label htmlFor="password" className="block text-sm mt-4 text-slate-300">Password</label>
+                <div className="relative mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    className="w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 pr-10 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200"
+                  >
+                    {showPassword ? (
+                      // eye-off icon
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                        <path d="M3 3l18 18" />
+                        <path d="M10.58 10.58A2 2 0 0012 14a2 2 0 001.42-.58" />
+                        <path d="M9.88 5.09A10.44 10.44 0 0112 5c5 0 9 5 9 7a12.33 12.33 0 01-2.3 3.23M6.11 6.11A12.52 12.52 0 003 12c0 2 4 7 9 7a10.74 10.74 0 004.1-.78" />
+                      </svg>
+                    ) : (
+                      // eye icon
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+
+                <button type="submit" disabled={loading} className="mt-5 inline-flex w-full items-center justify-center btn-primary-blue disabled:opacity-60">
+                  {loading ? 'Signing in...' : 'Sign in'}
+                </button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-slate-400">
+                New to KIT Library? Join our community and start your journey today!
+              </p>
+
+              <Link to="/student/register" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70">
+                Create an account
               </Link>
             </div>
           </div>
         </section>
-      </main>
-
-      {/* Footer with wooden shelf */}
-      <footer className="mt-auto">
-        <div className="shelf-bg h-20 md:h-24 w-full flex flex-col items-center justify-end">
-          <p className="mb-1 text-stone-100/90 text-sm md:text-base font-serif-academic text-center">© {new Date().getFullYear()} KIT Library Assistant</p>
-          <p className="mb-3 text-stone-200/80 text-[11px] md:text-sm italic text-center max-w-3xl px-3">
-            "A library is not a luxury but one of the necessities of life" — Henry Ward Beecher
-          </p>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 };

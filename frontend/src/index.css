@@ -170,4 +170,80 @@ code {
     background: linear-gradient(90deg, transparent, #cfa645, #b68c1f, #cfa645, transparent);
     border-radius: 9999px;
   }
+
+  /* ==== Dark split-screen theme helpers ==== */
+  .dark-grid {
+    background-color: #0b1220; /* near-black with blue tint */
+    background-image:
+      radial-gradient(transparent 1px, rgba(99,102,241,0.06) 1px),
+      radial-gradient(transparent 1px, rgba(99,102,241,0.06) 1px),
+      linear-gradient(to bottom right, rgba(99,102,241,0.14), rgba(15,23,42,0) 40%);
+    background-size: 24px 24px, 24px 24px, auto;
+    background-position: 0 0, 12px 12px, 0 0;
+  }
+  .glass-card {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(15, 23, 42, 0.55); /* slate-900 with opacity */
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 30px rgba(2,6,23,0.45);
+  }
+  .btn-primary-blue {
+    background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+    color: #fff;
+    padding: 0.625rem 1rem; /* py-2.5 px-4 */
+    border-radius: 0.5rem;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 10px 22px rgba(29,78,216,0.35);
+    transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    text-align: center;
+  }
+  .btn-primary-blue:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(29,78,216,0.45); }
+  .btn-primary-blue:active { transform: translateY(0); }
+  .btn-muted {
+    background: rgba(255,255,255,0.06);
+    color: #e5e7eb; /* gray-200 */
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .btn-muted:hover { background: rgba(255,255,255,0.1); }
+}
+
+/* Floating animation for decorative elements */
+@keyframes float-up-down {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+@layer utilities {
+  .float-slow { animation: float-up-down 8s ease-in-out infinite; }
+  .float-medium { animation: float-up-down 6s ease-in-out infinite; }
+  .float-fast { animation: float-up-down 4.5s ease-in-out infinite; }
+  .delay-0 { animation-delay: 0ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-1000 { animation-delay: 1000ms; }
+  .delay-1500 { animation-delay: 1500ms; }
+}
+
+/* Gentle twinkle and slow rotate */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.15); }
+}
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@layer utilities {
+  .twinkle { animation: twinkle 2.4s ease-in-out infinite; }
+  .twinkle-slow { animation: twinkle 3.2s ease-in-out infinite; }
+  .spin-very-slow { animation: rotate-slow 40s linear infinite; }
 }

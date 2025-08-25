@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -14,6 +15,7 @@ const AdminDashboard = () => {
   const [books, setBooks] = useState([]);
   const [students, setStudents] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({ _id: '', title: '', author: '', isbn: '', availability: true });
   const [showBorrowModal, setShowBorrowModal] = useState(false);
@@ -258,6 +260,17 @@ const AdminDashboard = () => {
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
+  // Close menus on scroll/resize so positioning doesn't get out of sync
+  useEffect(() => {
+    const close = () => setOpenMenuId(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, []);
+
   // Load students when authenticated (for borrow form)
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -468,7 +481,7 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto overflow-y-visible">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
@@ -493,11 +506,16 @@ const AdminDashboard = () => {
                               )}
                             </td>
                             <td className="px-4 py-2 text-right whitespace-nowrap">
-                              <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+                              <div className="inline-block text-left" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   type="button"
                                   className="inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                  onClick={() => setOpenMenuId(openMenuId === b._id ? null : b._id)}
+                                  onClick={(e) => {
+                                    const r = e.currentTarget.getBoundingClientRect();
+                                    // position menu below button; align right with 160px menu width (w-40)
+                                    setMenuPos({ top: r.bottom + 8, left: Math.max(8, r.right - 160) });
+                                    setOpenMenuId(openMenuId === b._id ? null : b._id);
+                                  }}
                                   aria-haspopup="true"
                                   aria-expanded={openMenuId === b._id}
                                 >
@@ -507,8 +525,13 @@ const AdminDashboard = () => {
                                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
                                   </svg>
                                 </button>
-                                {openMenuId === b._id && (
-                                  <div className="absolute right-0 z-20 mt-2 w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none flex flex-col">
+                              </div>
+                              {openMenuId === b._id && createPortal(
+                                (
+                                  <div
+                                    className="fixed z-[100] w-40 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none flex flex-col"
+                                    style={{ top: menuPos.top, left: menuPos.left }}
+                                  >
                                     <button
                                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                                       onClick={() => { setOpenMenuId(null); startEdit(b); }}
@@ -540,8 +563,9 @@ const AdminDashboard = () => {
                                       </button>
                                     )}
                                   </div>
-                                )}
-                              </div>
+                                ),
+                                document.body
+                              )}
                             </td>
                           </tr>
                         ))}

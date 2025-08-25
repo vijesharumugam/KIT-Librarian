@@ -76,39 +76,44 @@ const StudentProfile = () => {
     }
   };
 
+  const logoUrl = `${process.env.PUBLIC_URL}/images/logo.png`;
+
   return (
-    <div className="min-h-screen lib-bg flex flex-col">
-      <header className="relative overflow-hidden shadow">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900 via-amber-800 to-stone-800" />
-        <div className="relative container mx-auto px-3 sm:px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-amber-50 font-serif-academic text-xl sm:text-2xl font-extrabold tracking-wide">Student Profile</h1>
-            <button
-              onClick={() => navigate(-1)}
-              className="rounded-md border border-amber-300/40 bg-amber-50/10 px-2.5 py-1.5 sm:px-3 sm:py-2 text-amber-50 text-sm sm:text-base backdrop-blur hover:bg-amber-50/20"
-            >
-              Back
-            </button>
+    <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col">
+      {/* Global Header */}
+      <header className="w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={logoUrl} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
+            <div className="min-w-0">
+              <p className="text-slate-100 text-base sm:text-xl font-bold tracking-wide whitespace-normal md:whitespace-nowrap break-words leading-snug">Student Profile</p>
+              <p className="text-slate-300 text-xs sm:text-sm leading-tight">View and update your information</p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70"
+          >
+            Back
+          </button>
         </div>
       </header>
 
-      <main className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 flex-1 w-full">
+      <main className="mx-auto w-full max-w-3xl px-3 sm:px-6 py-6 sm:py-8 flex-1">
         {error && (
-          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-md border border-red-400/40 bg-red-900/20 px-4 py-3 text-sm text-red-200">{error}</div>
         )}
         {success && (
-          <div className="mb-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{success}</div>
+          <div className="mb-4 rounded-md border border-emerald-400/40 bg-emerald-900/20 px-4 py-3 text-sm text-emerald-200">{success}</div>
         )}
 
-        <div className="relative overflow-hidden book-card rounded-2xl border-gold bg-white/95 shadow-sm max-w-2xl mx-auto">
-          <div className="h-2 w-full bg-gradient-to-r from-amber-200 via-amber-100 to-emerald-100" />
+        <div className="glass-card rounded-2xl bg-slate-900/50 border border-white/10 shadow-xl overflow-hidden">
           {/* Edit button (view mode) */}
           {!isEditing && (
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-white/80 px-3 py-1.5 text-sm text-stone-700 shadow hover:bg-white"
+              className="absolute right-6 mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-100 shadow hover:bg-slate-800/70"
               aria-label="Edit profile"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -119,31 +124,31 @@ const StudentProfile = () => {
           )}
           <form onSubmit={onSubmit} className="p-4 sm:p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Name</label>
+              <label className="block text-sm text-slate-300 mb-1">Name</label>
               <input
                 name="name"
                 value={form.name}
                 onChange={onChange}
                 required
                 disabled={!isEditing}
-                className={`w-full rounded-md border px-3 py-2 text-stone-800 placeholder-stone-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${isEditing ? 'border-stone-300 bg-white' : 'border-stone-200 bg-stone-100 cursor-default'}`}
+                className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 ${isEditing ? 'border-white/10 bg-slate-800' : 'border-white/10 bg-slate-900/40 cursor-default'}`}
                 placeholder="Your name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Department</label>
+              <label className="block text-sm text-slate-300 mb-1">Department</label>
               <input
                 name="department"
                 value={form.department}
                 onChange={onChange}
                 required
                 disabled={!isEditing}
-                className={`w-full rounded-md border px-3 py-2 text-stone-800 placeholder-stone-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${isEditing ? 'border-stone-300 bg-white' : 'border-stone-200 bg-stone-100 cursor-default'}`}
+                className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 ${isEditing ? 'border-white/10 bg-slate-800' : 'border-white/10 bg-slate-900/40 cursor-default'}`}
                 placeholder="Department"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Phone Number</label>
+              <label className="block text-sm text-slate-300 mb-1">Phone Number</label>
               <input
                 name="phoneNumber"
                 value={form.phoneNumber}
@@ -152,7 +157,7 @@ const StudentProfile = () => {
                 disabled={!isEditing}
                 pattern="^[0-9+\-()\s]{7,15}$"
                 title="Enter a valid phone number"
-                className={`w-full rounded-md border px-3 py-2 text-stone-800 placeholder-stone-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${isEditing ? 'border-stone-300 bg-white' : 'border-stone-200 bg-stone-100 cursor-default'}`}
+                className={`w-full rounded-lg border px-3 py-2 text-slate-100 placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 ${isEditing ? 'border-white/10 bg-slate-800' : 'border-white/10 bg-slate-900/40 cursor-default'}`}
                 placeholder="Phone Number"
               />
             </div>
@@ -162,14 +167,14 @@ const StudentProfile = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2.5 font-medium text-emerald-50 shadow hover:bg-emerald-800 disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-500 disabled:opacity-60 btn-primary-blue"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setForm(initial); setIsEditing(false); setError(''); setSuccess(''); }}
-                  className="rounded-md border border-stone-300 bg-white px-4 py-2 text-stone-700 hover:bg-stone-50"
+                  className="rounded-md border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 hover:bg-slate-800/70"
                 >
                   Cancel
                 </button>
@@ -179,7 +184,7 @@ const StudentProfile = () => {
         </div>
       </main>
       <footer className="mt-auto">
-        <div className="shelf-bg h-16 md:h-20 w-full" />
+        <div className="w-full h-12" />
       </footer>
     </div>
   );
