@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 // Protect admin routes by verifying presence and validity of admin token
 export default function ProtectedRoute({ children }) {
@@ -18,8 +19,9 @@ export default function ProtectedRoute({ children }) {
           return;
         }
         // Validate token with a lightweight protected endpoint
-        const res = await fetch('http://localhost:5000/api/admin/stats', {
+        const res = await api.get('/api/admin/stats', {
           headers: { Authorization: `Bearer ${token}` },
+          validateStatus: () => true,
         });
         if (!isMounted) return;
         if (res.status === 401) {

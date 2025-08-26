@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
+import api from '../utils/api';
 
 const BooksPage = () => {
   const [books, setBooks] = useState([]);
@@ -13,9 +14,7 @@ const BooksPage = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch('http://localhost:5000/api/books');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
+      const { data } = await api.get('/api/books');
       setBooks(data);
     } catch (e) {
       setError(e.message);

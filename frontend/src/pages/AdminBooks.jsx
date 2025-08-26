@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const PAGE_SIZE = 10;
 
@@ -22,9 +23,7 @@ const AdminBooks = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch('http://localhost:5000/api/books');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
+      const { data } = await api.get('/api/books');
       setBooks(data || []);
     } catch (e) {
       setError(e.message);
@@ -69,16 +68,11 @@ const AdminBooks = () => {
     try {
       setSubmitting(true);
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/books/${editForm._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ title, author, totalQuantity: qtyNum }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Failed to update book');
+      await api.put(
+        `/api/books/${editForm._id}`,
+        { title, author, totalQuantity: qtyNum },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
       setToast('Book updated');
       setShowEditModal(false);
       setEditForm({ _id: '', title: '', author: '', totalQuantity: 1 });
@@ -311,16 +305,11 @@ const AdminBooks = () => {
                   try {
                     setSubmitting(true);
                     const token = localStorage.getItem('adminToken');
-                    const res = await fetch('http://localhost:5000/api/books', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                      },
-                      body: JSON.stringify({ title, author, isbn, totalQuantity: quantityNum }),
-                    });
-                    const data = await res.json().catch(() => ({}));
-                    if (!res.ok) throw new Error(data.message || 'Failed to add book');
+                    await api.post(
+                      '/api/books',
+                      { title, author, isbn, totalQuantity: quantityNum },
+                      { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+                    );
                     setToast('Book added successfully');
                     setShowAddModal(false);
                     setForm({ title: '', author: '', isbn: '', quantity: '' });

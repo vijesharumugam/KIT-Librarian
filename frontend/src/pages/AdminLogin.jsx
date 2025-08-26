@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -25,24 +26,16 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const { status, data } = await api.post('/api/admin/login', formData, { validateStatus: () => true });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (status >= 200 && status < 300) {
         // Save token in localStorage
         localStorage.setItem('adminToken', data.token);
         
         // Redirect to admin dashboard
         navigate('/admin/dashboard');
       } else {
-        setError(data.message || 'Login failed');
+        setError(data?.message || 'Login failed');
       }
     } catch (err) {
       setError('Network error. Please try again.');

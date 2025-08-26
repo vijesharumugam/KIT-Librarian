@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
+import api from '../utils/api';
 
 const StudentRegister = () => {
   const navigate = useNavigate();
@@ -27,22 +28,20 @@ const StudentRegister = () => {
         setError('Name and Department are required');
         return;
       }
-      const res = await fetch('http://localhost:5000/api/student/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
+      const { status, data } = await api.post(
+        '/api/student/register',
+        {
           registerNumber: form.registerNumber.trim(),
           phoneNumber: form.phoneNumber.trim(),
           password: form.password,
           name: form.name.trim(),
           department: form.department.trim(),
           email: form.email.trim() || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || 'Registration failed');
+        },
+        { validateStatus: () => true }
+      );
+      if (status >= 400) {
+        setError(data?.message || 'Registration failed');
         return;
       }
       setSuccess('Registered successfully. Redirecting...');

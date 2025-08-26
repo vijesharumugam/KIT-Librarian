@@ -14,6 +14,7 @@ import StudentRegister from './pages/StudentRegister';
 import StudentDashboard from './pages/StudentDashboard';
 import StudentProfile from './pages/StudentProfile';
 import BooksPage from './pages/BooksPage';
+import api from './utils/api';
 
 // Home component (dark split-screen themed landing)
 const Home = () => {
@@ -31,18 +32,12 @@ const Home = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/student/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          registerNumber: form.registerNumber.trim(),
-          password: form.password,
-        }),
+      const { status, data } = await api.post('/api/student/login', {
+        registerNumber: form.registerNumber.trim(),
+        password: form.password,
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || 'Invalid credentials');
+      if (status >= 400) {
+        setError(data?.message || 'Invalid credentials');
         return;
       }
       navigate('/student/dashboard');

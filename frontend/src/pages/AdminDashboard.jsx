@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 
 const AdminDashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,18 +52,18 @@ const AdminDashboard = () => {
       setError('');
       const token = localStorage.getItem('adminToken');
       if (!token) return;
-      const res = await fetch('http://localhost:5000/api/admin/stats', {
+      const res = await api.get('/api/admin/stats', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch stats');
+      const data = res.data || {};
       setTotalBooks(Number(data.totalBooks) || 0);
       setTotalStudents(Number(data.totalStudents) || 0);
       setIssuedBooks(Number(data.issuedBooks) || 0);
       setOverdueBooks(Number(data.overdueBooks) || 0);
     } catch (e) {
       // Surface but do not break the page
-      setError(e.message);
+      const msg = e?.response?.data?.message || e.message || 'Failed to fetch stats';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -99,17 +99,15 @@ const AdminDashboard = () => {
       setLoading(true);
       setBorrowModalError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch('http://localhost:5000/api/transactions/borrow', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
+      await api.post(
+        '/api/transactions/borrow',
+        {
           bookId: borrowModal.bookId,
           registerNumber: borrowModal.registerNumber,
           dueDate: borrowModal.dueDate,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to issue book');
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       // Update UI locally: mark this book as issued
       setBooks((prev) => prev.map((b) => (b._id === borrowModal.bookId ? { ...b, availability: false } : b)));
       setShowBorrowModal(false);
@@ -129,11 +127,10 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('adminToken');
       if (!token) return;
-      const res = await fetch('http://localhost:5000/api/transactions/issued', {
+      const res = await api.get('/api/transactions/issued', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) return; // don't override on error
+      const data = res.data;
       setIssuedBooks(Array.isArray(data) ? data.length : 0);
     } catch (_) {
       // ignore
@@ -145,11 +142,10 @@ const AdminDashboard = () => {
     try {
       const token = localStorage.getItem('adminToken');
       if (!token) return;
-      const res = await fetch('http://localhost:5000/api/transactions/overdue', {
+      const res = await api.get('/api/transactions/overdue', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (!res.ok) return;
+      const data = res.data;
       setOverdueBooks(Array.isArray(data) ? data.length : 0);
     } catch (_) {}
   };
@@ -170,18 +166,12 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`http://localhost:5000/api/books/${editForm._id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: editForm.title,
-          author: editForm.author,
-          isbn: editForm.isbn,
-          availability: editForm.availability,
-        }),
+      await api.put(`/api/books/${editForm._id}`, {
+        title: editForm.title,
+        author: editForm.author,
+        isbn: editForm.isbn,
+        availability: editForm.availability,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to update book');
       setShowEditModal(false);
       setEditForm({ _id: '', title: '', author: '', isbn: '', availability: true });
       fetchBooks();
@@ -198,9 +188,7 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch(`http://localhost:5000/api/books/${id}`, { method: 'DELETE' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Failed to delete book');
+      await api.delete(`/api/books/${id}`);
       fetchBooks();
       fetchStats();
     } catch (e) {
@@ -215,13 +203,11 @@ const AdminDashboard = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch('http://localhost:5000/api/transactions/return', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ bookId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to return book');
+      await api.post(
+        '/api/transactions/return',
+        { bookId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       fetchBooks();
       fetchStats();
       fetchIssuedCount();
@@ -278,14 +264,14 @@ const AdminDashboard = () => {
       try {
         setError('');
         const token = localStorage.getItem('adminToken');
-        const res = await fetch('http://localhost:5000/api/students', {
+        const res = await api.get('/api/students', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
+        const data = res.data || [];
         setStudents(data || []);
       } catch (e) {
-        setError(e.message);
+        const msg = e?.response?.data?.message || e.message || 'Failed to fetch students';
+        setError(msg);
       }
     };
     loadStudents();
@@ -296,12 +282,12 @@ const AdminDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch('http://localhost:5000/api/books');
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch books');
+      const res = await api.get('/api/books');
+      const data = res.data || [];
       setBooks(data || []);
     } catch (e) {
-      setError(e.message);
+      const msg = e?.response?.data?.message || e.message || 'Failed to fetch books';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -634,7 +620,7 @@ const AdminDashboard = () => {
                     const token = localStorage.getItem('adminToken');
                     const formData = new FormData();
                     formData.append('file', uploadFile);
-                    const res = await axios.post('/api/admin/books/upload', formData, {
+                    const res = await api.post('/api/admin/books/upload', formData, {
                       headers: {
                         'Content-Type': 'multipart/form-data',
                         ...(token ? { Authorization: `Bearer ${token}` } : {}),

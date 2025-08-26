@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const PAGE_SIZE = 10;
 
@@ -33,13 +34,10 @@ const AdminStudents = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const url = new URL('http://localhost:5000/api/students');
-      if (term.trim()) url.searchParams.set('search', term.trim());
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await api.get('/api/students', {
+        params: term.trim() ? { search: term.trim() } : {},
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch students');
       setStudents(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e.message);

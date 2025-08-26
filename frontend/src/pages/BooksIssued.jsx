@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const BooksIssued = () => {
   const [items, setItems] = useState([]);
@@ -23,11 +24,9 @@ const BooksIssued = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch('http://localhost:5000/api/transactions/issued', {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await api.get('/api/transactions/issued', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch issued books');
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e.message);
@@ -51,12 +50,9 @@ const BooksIssued = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/transactions/return/${id}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+      await api.put(`/api/transactions/return/${id}`, null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Failed to return book');
       // Refresh list
       await fetchIssued();
     } catch (e) {

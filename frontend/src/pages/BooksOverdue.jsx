@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const BooksOverdue = () => {
   const [items, setItems] = useState([]);
@@ -18,11 +19,9 @@ const BooksOverdue = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch('http://localhost:5000/api/transactions/overdue', {
-        headers: { Authorization: `Bearer ${token}` },
+      const { data } = await api.get('/api/transactions/overdue', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to fetch overdue books');
       setItems(Array.isArray(data) ? data : []);
     } catch (e) {
       setError(e.message);
@@ -47,12 +46,9 @@ const BooksOverdue = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      const res = await fetch(`http://localhost:5000/api/transactions/return/${id}`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+      await api.put(`/api/transactions/return/${id}`, null, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Failed to return book');
       await fetchOverdue();
       if (window?.alert) window.alert('Book returned successfully');
     } catch (e) {

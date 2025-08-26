@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 // Protect student routes by verifying session via HttpOnly cookie (studentToken)
 export default function StudentProtectedRoute({ children }) {
@@ -13,9 +14,7 @@ export default function StudentProtectedRoute({ children }) {
     (async () => {
       try {
         // Call a lightweight protected endpoint to verify cookie/session
-        const res = await fetch('http://localhost:5000/api/student/current', {
-          credentials: 'include',
-        });
+        const res = await api.get('/api/student/current', { validateStatus: () => true });
         if (!isMounted) return;
         if (res.status === 401) {
           navigate('/student/login', { replace: true, state: { from: location } });

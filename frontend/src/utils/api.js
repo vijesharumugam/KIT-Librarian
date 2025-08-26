@@ -10,28 +10,42 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to include auth token
+// Add a request interceptor to include admin auth token only for admin endpoints
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const url = config.url || '';
+      const isAdminEndpoint = typeof url === 'string' && url.startsWith('/api/admin');
+      if (isAdminEndpoint) {
+        const adminToken = localStorage.getItem('adminToken');
+        if (adminToken) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${adminToken}`;
+        }
+      }
+    } catch (_) {
+      // no-op
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle errors
+// Add a response interceptor to handle errors and route-specific redirects
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access (e.g., redirect to login)
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+    const status = error.response?.status;
+    if (status === 401) {
+      const url = error.config?.url || '';
+      const isAdminEndpoint = typeof url === 'string' && url.startsWith('/api/admin');
+      if (isAdminEndpoint) {
+        localStorage.removeItem('adminToken');
+        window.location.href = '/admin/login';
+      } else {
+        // Student cookie-based session expired
+        window.location.href = '/student/login';
+      }
     }
     return Promise.reject(error);
   }

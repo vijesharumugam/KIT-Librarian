@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
+import api from '../utils/api';
 
 const StudentLogin = () => {
   const navigate = useNavigate();
@@ -20,17 +21,11 @@ const StudentLogin = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/student/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          registerNumber: form.registerNumber.trim(),
-          password: form.password,
-        }),
+      const { status, data } = await api.post('/api/student/login', {
+        registerNumber: form.registerNumber.trim(),
+        password: form.password,
       });
-      const data = await res.json();
-      if (!res.ok) return setError(data.message || 'Invalid credentials');
+      if (status >= 400) return setError(data?.message || 'Invalid credentials');
 
       // Redirect to student dashboard
       navigate('/student/dashboard');

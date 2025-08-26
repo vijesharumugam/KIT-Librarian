@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
+import api from '../utils/api';
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -52,17 +53,8 @@ const StudentDashboard = () => {
     // Ping current to check auth via cookie; redirect if unauthorized
     (async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/student/current', {
-          credentials: 'include',
-        });
-        if (res.status === 401) {
-          navigate('/student/login');
-          return;
-        }
-        const data = await res.json();
-        if (res.ok) {
-          setCurrent(data.currentBooks || []);
-        }
+        const { data } = await api.get('/api/student/current');
+        setCurrent(data.currentBooks || []);
       } catch (e) {
         // ignore initial error; can still use page
       }
@@ -73,11 +65,7 @@ const StudentDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch('http://localhost:5000/api/student/current', {
-        credentials: 'include',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to load current books');
+      const { data } = await api.get('/api/student/current');
       setCurrent(data.currentBooks || []);
     } catch (e) {
       setError(e.message);
@@ -93,11 +81,7 @@ const StudentDashboard = () => {
   // Load notifications
   const fetchNotifications = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/student/notifications', {
-        credentials: 'include',
-      });
-      if (!res.ok) return; // ignore silently
-      const data = await res.json();
+      const { data } = await api.get('/api/student/notifications');
       if (Array.isArray(data?.items)) setNotifications(data.items);
       if (data?.lastReadAt) setLastReadAt(data.lastReadAt);
       // lastClearedAt is handled server-side to filter items; no local state needed
@@ -115,29 +99,17 @@ const StudentDashboard = () => {
 
   const markAllAsRead = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/student/notifications/read', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setLastReadAt(data?.lastReadAt || new Date().toISOString());
-      }
+      const { data } = await api.post('/api/student/notifications/read');
+      setLastReadAt(data?.lastReadAt || new Date().toISOString());
     } catch (_) {}
   };
 
   const clearAllNotifications = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/student/notifications/clear', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setNotifications([]);
-        // lastClearedAt not stored locally
-        if (data?.lastReadAt) setLastReadAt(data.lastReadAt);
-      }
+      const { data } = await api.post('/api/student/notifications/clear');
+      setNotifications([]);
+      // lastClearedAt not stored locally
+      if (data?.lastReadAt) setLastReadAt(data.lastReadAt);
     } catch (_) {}
   };
 
@@ -147,14 +119,13 @@ const StudentDashboard = () => {
     (async () => {
       try {
         setDiscLoading(true);
-        const [rRes, pRes] = await Promise.all([
-          fetch('http://localhost:5000/api/books/recent?limit=8'),
-          fetch('http://localhost:5000/api/books/popular?limit=8'),
+        const [{ data: rData }, { data: pData }] = await Promise.all([
+          api.get('/api/books/recent', { params: { limit: 8 } }),
+          api.get('/api/books/popular', { params: { limit: 8 } }),
         ]);
-        const [rData, pData] = await Promise.all([rRes.json(), pRes.json()]);
         if (!cancelled) {
-          if (rRes.ok) setRecent(Array.isArray(rData) ? rData : []);
-          if (pRes.ok) setPopular(Array.isArray(pData) ? pData : []);
+          setRecent(Array.isArray(rData) ? rData : []);
+          setPopular(Array.isArray(pData) ? pData : []);
         }
       } catch (_) {
         // ignore discovery errors for now
@@ -175,18 +146,16 @@ const StudentDashboard = () => {
     try {
       setLoading(true);
       setError('');
-      const url = new URL('http://localhost:5000/api/books/search');
+      let params = {};
       if (query.includes(':')) {
         const [key, ...rest] = query.split(':');
         const val = rest.join(':').trim();
-        if (key.trim().toLowerCase() === 'author') url.searchParams.set('author', val);
-        else url.searchParams.set('title', val);
+        if (key.trim().toLowerCase() === 'author') params.author = val;
+        else params.title = val;
       } else {
-        url.searchParams.set('title', query.trim());
+        params.title = query.trim();
       }
-      const res = await fetch(url.toString());
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Search failed');
+      const { data } = await api.get('/api/books/search', { params });
       setResults(data);
     } catch (e) {
       setError(e.message);
@@ -197,10 +166,7 @@ const StudentDashboard = () => {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:5000/api/student/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await api.post('/api/student/logout');
     } catch {}
     navigate('/student/login');
   };

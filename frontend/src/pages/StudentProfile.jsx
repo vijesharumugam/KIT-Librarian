@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
+import api from '../utils/api';
 
 const StudentProfile = () => {
   const navigate = useNavigate();
@@ -14,15 +15,12 @@ const StudentProfile = () => {
   const loadProfile = async () => {
     try {
       setError('');
-      const res = await fetch('http://localhost:5000/api/student/profile', {
-        credentials: 'include',
-      });
-      if (res.status === 401) {
+      const { data, status } = await api.get('/api/student/profile', { validateStatus: () => true });
+      if (status === 401) {
         navigate('/student/login');
         return;
       }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to load profile');
+      if (status >= 400) throw new Error(data?.message || 'Failed to load profile');
       const next = {
         name: data.name || '',
         department: data.department || '',
@@ -54,14 +52,8 @@ const StudentProfile = () => {
     try {
       setSaving(true);
       setError('');
-      const res = await fetch('http://localhost:5000/api/student/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to update profile');
+      const { data, status } = await api.put('/api/student/profile', form, { validateStatus: () => true });
+      if (status >= 400) throw new Error(data?.message || 'Failed to update profile');
       setSuccess('Profile updated successfully');
       const updated = {
         name: data.name || form.name,
