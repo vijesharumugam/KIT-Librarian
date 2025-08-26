@@ -31,5 +31,6 @@
     "cookie-parser": "^1.4.7",
     "multer": "^2.0.2",
     "xlsx": "^0.18.5"
-  }
+  },
+  "build": "env-cmd -f .env.production react-scripts build",
 }
