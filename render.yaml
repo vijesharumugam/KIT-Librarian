@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: kit-librarian-backend
+    env: node
+    build:
+      buildCommand: npm install
+      startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: kit-librarian-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CLIENT_ORIGIN
+        value: https://kit-librarian.onrender.com
+
+databases:
+  - name: kit-librarian-db
+    databaseName: kit-librarian
+    user: kit-librarian-user
+    plan: free
