@@ -74,6 +74,10 @@ code {
   /* Academic serif utility */
   .font-serif-academic { font-family: 'Merriweather', Georgia, serif; }
 
+  /* Hide scrollbars (for compact dropdowns) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
   /* Library themed background: warm gradient + subtle pattern (books, lamps hints) */
   .lib-bg {
     background-color: #f3efe7;

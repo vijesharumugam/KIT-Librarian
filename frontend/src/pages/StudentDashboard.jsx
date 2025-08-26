@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import FloatingDecor from '../components/FloatingDecor';
 
@@ -15,6 +15,38 @@ const StudentDashboard = () => {
   const [popular, setPopular] = useState([]);
   const [discLoading, setDiscLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [lastReadAt, setLastReadAt] = useState(null);
+
+  // Refs for outside-click handling of notifications dropdown
+  const notifBtnRef = useRef(null);
+  const notifPanelRef = useRef(null);
+
+  // Close notifications when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!notifOpen) return;
+
+    const onDown = (e) => {
+      const btn = notifBtnRef.current;
+      const panel = notifPanelRef.current;
+      if (!btn || !panel) return;
+      if (btn.contains(e.target) || panel.contains(e.target)) return;
+      setNotifOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') setNotifOpen(false);
+    };
+
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown, { passive: true });
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [notifOpen]);
 
   useEffect(() => {
     // Ping current to check auth via cookie; redirect if unauthorized
@@ -57,6 +89,57 @@ const StudentDashboard = () => {
   useEffect(() => {
     fetchCurrent();
   }, [fetchCurrent]);
+
+  // Load notifications
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/student/notifications', {
+        credentials: 'include',
+      });
+      if (!res.ok) return; // ignore silently
+      const data = await res.json();
+      if (Array.isArray(data?.items)) setNotifications(data.items);
+      if (data?.lastReadAt) setLastReadAt(data.lastReadAt);
+      // lastClearedAt is handled server-side to filter items; no local state needed
+    } catch (_) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  const unreadCount = useMemo(() => {
+    const lr = lastReadAt ? new Date(lastReadAt) : new Date(0);
+    return notifications.filter(n => new Date(n.at) > lr).length;
+  }, [notifications, lastReadAt]);
+
+  const markAllAsRead = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/student/notifications/read', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setLastReadAt(data?.lastReadAt || new Date().toISOString());
+      }
+    } catch (_) {}
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/student/notifications/clear', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setNotifications([]);
+        // lastClearedAt not stored locally
+        if (data?.lastReadAt) setLastReadAt(data.lastReadAt);
+      }
+    } catch (_) {}
+  };
 
   // Fetch discovery sections (recent and popular)
   useEffect(() => {
@@ -126,7 +209,7 @@ const StudentDashboard = () => {
     <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col relative">
       <FloatingDecor />
       {/* Global Header */}
-      <header className="relative z-10 w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
+      <header className="relative z-40 w-full border-b border-white/10 backdrop-blur supports-[backdrop-filter]:bg-slate-900/40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <img src={logoUrl} alt="Logo" className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-white/90 object-contain" onError={(e)=>{e.currentTarget.style.display='none';}} />
@@ -135,19 +218,86 @@ const StudentDashboard = () => {
               <p className="text-slate-300 text-xs sm:text-sm leading-tight">Search books and view your current reading</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
+            {/* Notifications */}
+            <button
+              ref={notifBtnRef}
+              onClick={() => setNotifOpen((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 relative"
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
+                <path d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center rounded-full bg-rose-500 text-white text-[10px] h-4 min-w-[16px] px-1">
+                  {Math.min(9, unreadCount)}{unreadCount > 9 ? '+' : ''}
+                </span>
+              )}
+            </button>
+            {notifOpen && (
+              <div ref={notifPanelRef} className="absolute right-24 sm:right-32 top-full mt-2 w-72 max-h-80 overflow-auto no-scrollbar rounded-lg border border-white/10 bg-slate-900/90 backdrop-blur shadow-xl p-0 z-50">
+                <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                  <div className="text-sm text-slate-300">Notifications</div>
+                  {notifications.length > 0 && (
+                    <div className="flex gap-3">
+                      <button onClick={markAllAsRead} className="text-xs text-indigo-300 hover:text-indigo-200">Mark all as read</button>
+                      <button onClick={clearAllNotifications} className="text-xs text-rose-300 hover:text-rose-200">Clear all</button>
+                    </div>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="text-sm text-slate-300 p-3">No notifications</div>
+                ) : (
+                  <ul className="space-y-1 p-2">
+                    {notifications.map((n, idx) => (
+                      <li key={idx} className="rounded-md p-2 bg-slate-800/60 border border-white/5">
+                        <div className="flex items-start gap-2">
+                          <div className="mt-0.5 text-indigo-300">
+                            {n.type === 'borrow' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M4 4h14a2 2 0 0 1 2 2v12H6a2 2 0 0 1-2-2V4z" />
+                              </svg>
+                            )}
+                            {n.type === 'return' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M10 17l-5-5 5-5v3h8v4h-8v3z" />
+                              </svg>
+                            )}
+                            {n.type === 'dueSoon' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 11h-3V7h2v4h1z" />
+                              </svg>
+                            )}
+                            {n.type === 'overdue' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 11h-3V7h2v4h1zm-3 4h4v-2h-4z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div className="min-w-0 text-sm">
+                            <div className="font-medium text-slate-100 truncate">{n.title}</div>
+                            <div className="text-slate-300 text-xs truncate">{n.message}</div>
+                            <div className="text-slate-500 text-[10px] mt-0.5">{new Date(n.at).toLocaleString()}</div>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <Link to="/student/profile" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
                 <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z" />
               </svg>
-              <span className="font-medium">Profile</span>
             </Link>
             <button onClick={() => setShowLogoutModal(true)} className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
                 <path d="M16 17v-2h-4v-2h4V11l3 3-3 3z" />
                 <path d="M14 7V5H5v14h9v-2H7V7h7z" />
               </svg>
-              <span className="font-medium">Logout</span>
             </button>
           </div>
         </div>

@@ -38,6 +38,10 @@ const studentSchema = new mongoose.Schema({
   // Persistent counters for quick dashboard stats
   booksBorrowedCount: { type: Number, default: 0 },
   overdueBooksCount: { type: Number, default: 0 },
+  // Notifications read tracking
+  lastNotificationsReadAt: { type: Date, default: null },
+  // Notifications cleared timestamp (hide older events)
+  lastNotificationsClearedAt: { type: Date, default: null },
   // Data retention and privacy
   analyticsConsent: { type: Boolean, default: false },
   anonymizedAt: { type: Date, default: null },

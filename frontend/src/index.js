@@ -10,8 +10,9 @@ root.render(
   </React.StrictMode>
 );
 
-// Register a simple service worker for PWA installability
-if ('serviceWorker' in navigator) {
+// Register service worker only when explicitly enabled and in production
+const SW_ENABLED = process.env.REACT_APP_ENABLE_SW === 'true';
+if (process.env.NODE_ENV === 'production' && SW_ENABLED && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/service-worker.js')
@@ -22,4 +23,17 @@ if ('serviceWorker' in navigator) {
         console.error('Service Worker registration failed:', error);
       });
   });
+} else {
+  // In development, ensure any existing SWs are unregistered and caches cleared
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((reg) => reg.unregister());
+    });
+  }
+  if (typeof caches !== 'undefined' && caches.keys) {
+    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+  }
+  if (process.env.NODE_ENV !== 'production' || !SW_ENABLED) {
+    console.log('[SW] Disabled (env:', process.env.NODE_ENV, 'REACT_APP_ENABLE_SW:', process.env.REACT_APP_ENABLE_SW, ')');
+  }
 }
