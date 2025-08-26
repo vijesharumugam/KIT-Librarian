@@ -2,27 +2,35 @@ services:
   - type: web
     name: kit-librarian-backend
     env: node
-    build:
-      buildCommand: npm install
-      startCommand: npm start
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: MONGODB_URI
-        fromDatabase:
-          name: kit-librarian-db
-          property: connectionString
+        # Set this in the Render dashboard after creating the service
+        sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
       - key: CLIENT_ORIGIN
+        # Update this to your actual frontend URL after the static site is deployed
         value: https://kit-librarian.onrender.com
 
-databases:
-  - name: kit-librarian-db
-    databaseName: kit-librarian
-    user: kit-librarian-user
-    plan: free
+  - type: static
+    name: kit-librarian
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        # Set this to the backend URL after the backend is deployed
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: GENERATE_SOURCEMAP
+        value: "false"
