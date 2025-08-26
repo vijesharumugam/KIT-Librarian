@@ -23,8 +23,8 @@ const AdminBooks = () => {
     try {
       setLoading(true);
       setError('');
-      const { data } = await api.get('/api/books');
-      setBooks(data || []);
+      const response = await api.get('/api/books');
+      setBooks(response.data || []);
     } catch (e) {
       setError(e.message);
     } finally {

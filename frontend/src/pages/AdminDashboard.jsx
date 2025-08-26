@@ -620,13 +620,12 @@ const AdminDashboard = () => {
                     const token = localStorage.getItem('adminToken');
                     const formData = new FormData();
                     formData.append('file', uploadFile);
-                    const res = await api.post('/api/admin/books/upload', formData, {
+                    const { data } = await api.post('/api/admin/books/upload', formData, {
                       headers: {
                         'Content-Type': 'multipart/form-data',
                         ...(token ? { Authorization: `Bearer ${token}` } : {}),
                       },
                     });
-                    const data = res.data || {};
                     setToast(`Upload successful: inserted ${data.inserted || 0}, updated ${data.updated || 0}`);
                     setShowUploadModal(false);
                     setUploadFile(null);
