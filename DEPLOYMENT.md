@@ -26,7 +26,6 @@ This guide will walk you through deploying the Kit Librarian application to Rend
    - `JWT_ACCESS_SECRET`: Generate a secure secret
    - `JWT_REFRESH_SECRET`: Generate a different secure secret
    - `CLIENT_ORIGIN`: https://kit-librarian.onrender.com (update after frontend deployment)
-   - `PORT`: 10000
    - `NODE_ENV`: production
 8. Click **Create Web Service**
 
@@ -83,6 +82,7 @@ GENERATE_SOURCEMAP=false
 2. Confirm CORS: backend `allowedOrigins` in `backend/server.js` uses `CLIENT_ORIGIN`. It must match exactly.
 3. Test all API endpoints and UI flows
 4. Set up a custom domain (optional) in the Render dashboard
+5. Do not set a fixed `PORT`. Render provides `PORT` dynamically; the app already reads `process.env.PORT`.
 
 ## Troubleshooting
 
