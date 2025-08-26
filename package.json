@@ -4,16 +4,6 @@
   "version": "1.0.0",
   "description": "A MERN stack application for managing kits and libraries",
   "main": "index.js",
-  "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "cd backend && npm run dev",
-    "client": "cd frontend && npm start",
-    "install-server": "cd backend && npm install",
-    "install-client": "cd frontend && npm install",
-    "install-all": "npm run install-server && npm run install-client",
-    "prepare": "husky install",
-    "scan:secrets": "node scripts/scan-secrets.js"
-  },
   "keywords": [
     "mern",
     "react",
@@ -30,7 +20,24 @@
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "multer": "^2.0.2",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "nodemailer": "^6.9.13"
   },
-  "build": "env-cmd -f .env.production react-scripts build",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "install-server": "cd backend && npm install",
+    "install-client": "cd frontend && npm install",
+    "install-all": "npm run install-server && npm run install-client",
+    "prepare": "husky install",
+    "scan:secrets": "node scripts/scan-secrets.js",
+    "build": "cd frontend && npm install && npm run build"
+  }
 }
