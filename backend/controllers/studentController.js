@@ -38,7 +38,7 @@ async function registerStudent(req, res) {
     res.cookie('studentToken', token, {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -81,7 +81,7 @@ async function loginStudent(req, res) {
     res.cookie('studentToken', token, {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -98,7 +98,7 @@ function logoutStudent(req, res) {
     res.clearCookie('studentToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     });
     return res.json({ message: 'Logged out' });
   } catch (e) {
