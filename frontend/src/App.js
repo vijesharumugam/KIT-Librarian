@@ -32,17 +32,32 @@ const Home = () => {
     setLoading(true);
     setError('');
     try {
-      const { status, data } = await api.post('/api/student/login', {
+      const response = await api.post('/api/student/login', {
         registerNumber: form.registerNumber.trim(),
         password: form.password,
       });
-      if (status >= 400) {
-        setError(data?.message || 'Invalid credentials');
-        return;
+      
+      console.log('Login response:', response.status, response.data);
+      
+      if (response.status >= 200 && response.status < 300) {
+        // Success - navigate to dashboard
+        console.log('Login successful, navigating to dashboard');
+        navigate('/student/dashboard');
+      } else {
+        setError(response.data?.message || 'Invalid credentials');
       }
-      navigate('/student/dashboard');
     } catch (err) {
-      setError('Network error. Please try again.');
+      console.error('Login error:', err);
+      if (err.response) {
+        // Server responded with error status
+        setError(err.response.data?.message || `Server error: ${err.response.status}`);
+      } else if (err.request) {
+        // Network error
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        // Other error
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
