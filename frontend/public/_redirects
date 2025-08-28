@@ -1,1 +1,4 @@
-/*    /index.html   200
+/admin/*    /index.html   200
+/student/*  /index.html   200
+/books      /index.html   200
+/*          /index.html   200
