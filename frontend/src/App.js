@@ -204,6 +204,10 @@ const Home = () => {
               <Link to="/student/register" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70">
                 Create an account
               </Link>
+              
+              <Link to="/admin/login" className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-orange-400/20 px-4 py-2.5 text-orange-200 hover:bg-orange-900/20">
+                Admin Login
+              </Link>
             </div>
           </div>
         </section>
