@@ -52,10 +52,15 @@ const Home = () => {
           console.log('Stored token in localStorage for iOS compatibility');
         }
         
-        // Add a small delay for iOS Safari to process cookies
-        setTimeout(() => {
+        // For iOS, use window.location instead of navigate
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          console.log('iOS detected, using window.location for redirect');
+          window.location.href = '/student/dashboard';
+        } else {
+          console.log('Non-iOS, using navigate');
           navigate('/student/dashboard');
-        }, 100);
+        }
       } else {
         setError(response.data?.message || 'Invalid credentials');
       }
@@ -170,7 +175,11 @@ const Home = () => {
 
             <div className="glass-card p-6 rounded-xl border border-white/10 shadow-xl bg-slate-900/50">
               {error && (
-                <div className="mb-4 rounded-md border border-red-400/40 bg-red-900/20 px-3 py-2 text-sm text-red-200">{error}</div>
+                <div className="mb-4 rounded-md border border-red-400/40 bg-red-900/20 px-3 py-2 text-sm text-red-200">
+                  <div className="font-medium">Login Error:</div>
+                  <div>{error}</div>
+                  <div className="text-xs mt-1 opacity-75">Check console for detailed logs</div>
+                </div>
               )}
               <form onSubmit={handleSubmit}>
                 <label htmlFor="registerNumber" className="block text-sm text-slate-300">Register Number</label>
