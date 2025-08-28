@@ -11,17 +11,26 @@ const api = axios.create({
   },
 });
 
-// Add a request interceptor to include admin auth token only for admin endpoints
+// Add a request interceptor to include auth tokens
 api.interceptors.request.use(
   (config) => {
     try {
       const url = config.url || '';
       const isAdminEndpoint = typeof url === 'string' && url.startsWith('/api/admin');
+      const isStudentEndpoint = typeof url === 'string' && url.startsWith('/api/student');
+      
       if (isAdminEndpoint) {
         const adminToken = localStorage.getItem('adminToken');
         if (adminToken) {
           config.headers = config.headers || {};
           config.headers.Authorization = `Bearer ${adminToken}`;
+        }
+      } else if (isStudentEndpoint) {
+        // For iOS compatibility, also send student token in header as fallback
+        const studentToken = localStorage.getItem('studentToken');
+        if (studentToken) {
+          config.headers = config.headers || {};
+          config.headers.Authorization = `Bearer ${studentToken}`;
         }
       }
     } catch (_) {

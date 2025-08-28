@@ -38,11 +38,24 @@ const Home = () => {
       });
       
       console.log('Login response:', response.status, response.data);
+      console.log('Response headers:', response.headers);
+      console.log('User agent:', navigator.userAgent);
+      console.log('Is iOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
       
       if (response.status >= 200 && response.status < 300) {
-        // Success - navigate to dashboard
+        // Success - store token for iOS fallback and navigate
         console.log('Login successful, navigating to dashboard');
-        navigate('/student/dashboard');
+        
+        // Store token in localStorage as fallback for iOS
+        if (response.data.token) {
+          localStorage.setItem('studentToken', response.data.token);
+          console.log('Stored token in localStorage for iOS compatibility');
+        }
+        
+        // Add a small delay for iOS Safari to process cookies
+        setTimeout(() => {
+          navigate('/student/dashboard');
+        }, 100);
       } else {
         setError(response.data?.message || 'Invalid credentials');
       }

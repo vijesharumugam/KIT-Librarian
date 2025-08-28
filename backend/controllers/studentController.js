@@ -78,14 +78,27 @@ async function loginStudent(req, res) {
 
     const token = signAccess({ id: student._id, registerNumber: student.registerNumber, role: 'student' });
 
-    res.cookie('studentToken', token, {
+    // Set cookie with iOS-compatible settings
+    const cookieOptions = {
       httpOnly: true,
       secure: config.NODE_ENV === 'production',
       sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
-    });
+    };
+    
+    console.log('Setting cookie with options:', cookieOptions);
+    res.cookie('studentToken', token, cookieOptions);
 
-    return res.json({ message: 'Login successful' });
+    return res.json({ 
+      message: 'Login successful',
+      token: token, // Also send token in response for iOS fallback
+      student: {
+        id: student._id,
+        registerNumber: student.registerNumber,
+        name: student.name,
+        department: student.department
+      }
+    });
   } catch (error) {
     console.error('Login student error:', error);
     return res.status(500).json({ message: 'Server error' });
