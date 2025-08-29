@@ -30,7 +30,7 @@ const loginAdmin = async (req, res) => {
     }
 
     // Generate JWT token (rotation-aware)
-    const token = signAccess({ id: admin._id, username: admin.username });
+    const token = signAccess({ id: admin._id, username: admin.username, role: 'admin' });
 
     res.json({
       message: 'Login successful',
