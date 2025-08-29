@@ -49,11 +49,16 @@ api.interceptors.response.use(
     if (status === 401) {
       const url = error.config?.url || '';
       const isAdminEndpoint = typeof url === 'string' && url.startsWith('/api/admin');
+      
+      console.log('API Interceptor 401:', { url, isAdminEndpoint, userAgent: navigator.userAgent });
+      
       if (isAdminEndpoint) {
         localStorage.removeItem('adminToken');
-        window.location.href = '/admin/login';
+        console.log('API Interceptor: Admin 401, removed token');
+        // Don't auto-redirect here - let ProtectedRoute handle it to avoid conflicts
       } else {
         // Student cookie-based session expired
+        console.log('API Interceptor: Student 401, redirecting to student login');
         window.location.href = '/student/login';
       }
     }
