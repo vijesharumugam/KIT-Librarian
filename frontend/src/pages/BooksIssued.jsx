@@ -50,13 +50,17 @@ const BooksIssued = () => {
       setLoading(true);
       setError('');
       const token = localStorage.getItem('adminToken');
-      await api.put(`/api/transactions/return/${id}`, null, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      await api.put(`/api/transactions/return/${id}`, {}, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
       });
       // Refresh list
       await fetchIssued();
     } catch (e) {
-      setError(e.message);
+      console.error('Return error:', e);
+      setError(e.response?.data?.message || e.message || 'Error returning book');
     } finally {
       setLoading(false);
     }
