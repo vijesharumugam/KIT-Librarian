@@ -45,6 +45,7 @@ async function registerStudent(req, res) {
     // Return created student's public info
     return res.status(201).json({
       message: 'Student registered successfully',
+      token: token, // Also send token in response for iOS fallback
       id: student._id,
       registerNumber: student.registerNumber,
       name: student.name,

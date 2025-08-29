@@ -30,20 +30,35 @@ const authMiddleware = async (req, res, next) => {
 // Student auth
 async function verifyStudent(req, res, next) {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.studentToken;
+    const authHeader = req.header('Authorization');
+    const cookieToken = req.cookies?.studentToken;
+    const token = authHeader?.replace('Bearer ', '') || cookieToken;
+    
+    console.log('[Student Auth Debug]', {
+      hasAuthHeader: !!authHeader,
+      hasCookieToken: !!cookieToken,
+      hasToken: !!token,
+      url: req.url
+    });
+    
     if (!token) return res.status(401).json({ message: 'No token provided' });
 
     const decoded = verifyAccess(token);
     if (!decoded || decoded.role !== 'student') {
+      console.log('[Student Auth] Invalid token or role:', { decoded: decoded ? { id: decoded.id, role: decoded.role } : null });
       return res.status(401).json({ message: 'Invalid token' });
     }
 
     const student = await Student.findById(decoded.id).select('-password');
-    if (!student) return res.status(401).json({ message: 'Student not found' });
+    if (!student) {
+      console.log('[Student Auth] Student not found for ID:', decoded.id);
+      return res.status(401).json({ message: 'Student not found' });
+    }
 
     req.student = student;
     next();
   } catch (err) {
+    console.log('[Student Auth] Error:', err.message);
     return res.status(401).json({ message: 'Unauthorized' });
   }
 }

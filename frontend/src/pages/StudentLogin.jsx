@@ -27,6 +27,11 @@ const StudentLogin = () => {
       });
       if (status >= 400) return setError(data?.message || 'Invalid credentials');
 
+      // Store the JWT token for iOS/mobile compatibility
+      if (data.token) {
+        localStorage.setItem('studentToken', data.token);
+      }
+
       // Redirect to student dashboard
       navigate('/student/dashboard');
     } catch (err) {

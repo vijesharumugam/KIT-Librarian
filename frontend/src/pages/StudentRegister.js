@@ -45,6 +45,12 @@ const StudentRegister = () => {
         return;
       }
       setSuccess('Registered successfully. Redirecting...');
+      
+      // Store the JWT token for iOS/mobile compatibility
+      if (data.token) {
+        localStorage.setItem('studentToken', data.token);
+      }
+      
       // Cookie is set by backend; navigate to dashboard
       setTimeout(() => navigate('/student/dashboard'), 500);
     } catch (e) {
