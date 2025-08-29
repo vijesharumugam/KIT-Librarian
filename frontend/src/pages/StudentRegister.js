@@ -97,6 +97,7 @@ const StudentRegister = () => {
                   name="name"
                   type="text"
                   required
+                  autoComplete="name"
                   value={form.name}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -111,6 +112,7 @@ const StudentRegister = () => {
                   name="department"
                   type="text"
                   required
+                  autoComplete="organization"
                   value={form.department}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -124,6 +126,7 @@ const StudentRegister = () => {
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   value={form.email}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -138,6 +141,7 @@ const StudentRegister = () => {
                   name="registerNumber"
                   type="text"
                   required
+                  autoComplete="username"
                   value={form.registerNumber}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -152,6 +156,7 @@ const StudentRegister = () => {
                   name="phoneNumber"
                   type="tel"
                   required
+                  autoComplete="tel"
                   value={form.phoneNumber}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -167,6 +172,7 @@ const StudentRegister = () => {
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="new-password"
                     value={form.password}
                     onChange={handleChange}
                     className="w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 pr-10 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"

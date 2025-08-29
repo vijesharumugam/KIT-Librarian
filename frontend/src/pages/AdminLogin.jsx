@@ -28,18 +28,43 @@ const AdminLogin = () => {
     try {
       const { status, data } = await api.post('/api/admin/login', formData, { validateStatus: () => true });
 
+      console.log('Admin login response:', status, data);
+      console.log('Response headers:', data);
+      console.log('User agent:', navigator.userAgent);
+      console.log('Is iOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
+
       if (status >= 200 && status < 300) {
-        // Save token in localStorage
-        localStorage.setItem('adminToken', data.token);
+        console.log('Admin login successful, navigating to dashboard');
         
-        // Redirect to admin dashboard
-        navigate('/admin/dashboard');
+        // Save token in localStorage for iOS fallback
+        if (data.token) {
+          localStorage.setItem('adminToken', data.token);
+          console.log('Stored admin token in localStorage for iOS compatibility');
+        }
+        
+        // For iOS/mobile, use window.location instead of navigate for better compatibility
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isIOS || isMobile) {
+          console.log('Mobile/iOS detected, using window.location for redirect');
+          window.location.href = '/admin/dashboard';
+        } else {
+          console.log('Desktop browser, using navigate');
+          navigate('/admin/dashboard');
+        }
       } else {
         setError(data?.message || 'Login failed');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
-      console.error('Login error:', err);
+      console.error('Admin login error:', err);
+      if (err.response) {
+        setError(err.response.data?.message || `Server error: ${err.response.status}`);
+      } else if (err.request) {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -77,6 +102,7 @@ const AdminLogin = () => {
                   name="username"
                   type="text"
                   required
+                  autoComplete="username"
                   value={formData.username}
                   onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
@@ -95,6 +121,7 @@ const AdminLogin = () => {
                   name="password"
                   type="password"
                   required
+                  autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
