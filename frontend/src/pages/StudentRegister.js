@@ -101,7 +101,7 @@ const StudentRegister = () => {
                   value={form.name}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., John Doe"
+                  placeholder="Name"
                 />
               </div>
 
@@ -116,7 +116,7 @@ const StudentRegister = () => {
                   value={form.department}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., Artificial Intelligence and Data Science"
+                  placeholder="Enter your Department"
                 />
               </div>
 
@@ -130,7 +130,7 @@ const StudentRegister = () => {
                   value={form.email}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., student@example.com"
+                  placeholder="Enter your Email"
                 />
               </div>
 
@@ -145,7 +145,7 @@ const StudentRegister = () => {
                   value={form.registerNumber}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., REG0001"
+                  placeholder="Enter your Register Number"
                 />
               </div>
 
@@ -160,7 +160,7 @@ const StudentRegister = () => {
                   value={form.phoneNumber}
                   onChange={handleChange}
                   className="mt-1 w-full rounded-lg bg-slate-800 text-slate-100 placeholder-slate-500 px-3 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="e.g., +911234567890"
+                  placeholder="Enter your Phone Number"
                 />
               </div>
 
