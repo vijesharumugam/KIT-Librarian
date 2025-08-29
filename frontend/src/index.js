@@ -10,9 +10,9 @@ root.render(
   </React.StrictMode>
 );
 
-// Register service worker only when explicitly enabled and in production
-const SW_ENABLED = process.env.REACT_APP_ENABLE_SW === 'true';
-if (process.env.NODE_ENV === 'production' && SW_ENABLED && 'serviceWorker' in navigator) {
+// Register service worker for PWA functionality
+const SW_ENABLED = process.env.REACT_APP_ENABLE_SW !== 'false'; // Enable by default
+if (SW_ENABLED && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/service-worker.js')
