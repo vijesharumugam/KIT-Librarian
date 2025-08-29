@@ -88,7 +88,7 @@ const StudentProfile = () => {
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70"
+            className="rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 touch-target"
           >
             Back
           </button>
@@ -109,7 +109,7 @@ const StudentProfile = () => {
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="absolute right-6 mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-100 shadow hover:bg-slate-800/70"
+              className="absolute right-6 mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-slate-900/60 px-3 py-1.5 text-sm text-slate-100 shadow hover:bg-slate-800/70 touch-target"
               aria-label="Edit profile"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -178,14 +178,14 @@ const StudentProfile = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-500 disabled:opacity-60 btn-primary-blue"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-500 disabled:opacity-60 btn-primary-blue touch-target"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setForm(initial); setIsEditing(false); setError(''); setSuccess(''); }}
-                  className="rounded-md border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 hover:bg-slate-800/70"
+                  className="rounded-md border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 hover:bg-slate-800/70 touch-target"
                 >
                   Cancel
                 </button>

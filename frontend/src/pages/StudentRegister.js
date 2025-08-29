@@ -177,7 +177,7 @@ const StudentRegister = () => {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200 touch-target"
                   >
                     {showPassword ? (
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
@@ -195,13 +195,13 @@ const StudentRegister = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className="mt-2 inline-flex w-full items-center justify-center btn-primary-blue disabled:opacity-60">
+              <button type="submit" disabled={loading} className="mt-2 inline-flex w-full items-center justify-center btn-primary-blue disabled:opacity-60 touch-target">
                 {loading ? 'Registering...' : 'Create account'}
               </button>
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-400">Already have an account?</p>
-            <Link to="/student/login" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70">
+            <Link to="/student/login" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70 touch-target">
               Sign in
             </Link>
           </div>

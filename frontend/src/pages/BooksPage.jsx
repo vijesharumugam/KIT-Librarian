@@ -60,7 +60,7 @@ const BooksPage = () => {
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="btn-muted"
+            className="btn-muted touch-target"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
               <path d="M15 18l-6-6 6-6v12z" />
@@ -100,7 +100,7 @@ const BooksPage = () => {
               <button
                 onClick={fetchBooks}
                 disabled={loading}
-                className="inline-flex items-center justify-center gap-2 btn-primary-blue w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 btn-primary-blue w-full sm:w-auto touch-target"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                   <path d="M12 6V3L8 7l4 4V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z" />

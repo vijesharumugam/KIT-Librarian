@@ -189,7 +189,7 @@ const StudentDashboard = () => {
             <button
               ref={notifBtnRef}
               onClick={() => setNotifOpen((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 relative"
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 relative touch-target"
               aria-label="Notifications"
               title="Notifications"
             >
@@ -203,13 +203,13 @@ const StudentDashboard = () => {
               )}
             </button>
             {notifOpen && (
-              <div ref={notifPanelRef} className="absolute right-24 sm:right-32 top-full mt-2 w-72 max-h-80 overflow-auto no-scrollbar rounded-lg border border-white/10 bg-slate-900/90 backdrop-blur shadow-xl p-0 z-50">
+              <div ref={notifPanelRef} className="mobile-dropdown rounded-lg border border-white/10 bg-slate-900/90 backdrop-blur shadow-xl p-0 z-50 overflow-auto no-scrollbar">
                 <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
                   <div className="text-sm text-slate-300">Notifications</div>
                   {notifications.length > 0 && (
                     <div className="flex gap-3">
-                      <button onClick={markAllAsRead} className="text-xs text-indigo-300 hover:text-indigo-200">Mark all as read</button>
-                      <button onClick={clearAllNotifications} className="text-xs text-rose-300 hover:text-rose-200">Clear all</button>
+                      <button onClick={markAllAsRead} className="text-xs text-indigo-300 hover:text-indigo-200 touch-target px-2 py-1">Mark all as read</button>
+                      <button onClick={clearAllNotifications} className="text-xs text-rose-300 hover:text-rose-200 touch-target px-2 py-1">Clear all</button>
                     </div>
                   )}
                 </div>
@@ -254,12 +254,12 @@ const StudentDashboard = () => {
                 )}
               </div>
             )}
-            <Link to="/student/profile" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
+            <Link to="/student/profile" className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 touch-target">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
                 <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5zm0 2c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z" />
               </svg>
             </Link>
-            <button onClick={() => setShowLogoutModal(true)} className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70">
+            <button onClick={() => setShowLogoutModal(true)} className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-slate-900/50 px-3 py-2 text-slate-100 hover:bg-slate-800/70 touch-target">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 opacity-90">
                 <path d="M16 17v-2h-4v-2h4V11l3 3-3 3z" />
                 <path d="M14 7V5H5v14h9v-2H7V7h7z" />
@@ -296,7 +296,7 @@ const StudentDashboard = () => {
                   onChange={(e) => setQuery(e.target.value)}
                 />
               </div>
-              <button disabled={!canSearch || loading} className="inline-flex items-center justify-center gap-2 btn-primary-blue w-full sm:w-auto">
+              <button disabled={!canSearch || loading} className="inline-flex items-center justify-center gap-2 btn-primary-blue w-full sm:w-auto touch-target">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
                   <path d="M3 12h13v2H3zM10 5h2v13h-2z" />
                 </svg>
@@ -476,8 +476,8 @@ const StudentDashboard = () => {
 
       {/* Logout confirmation modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="glass-card w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 safe-area-top safe-area-bottom">
+          <div className="glass-card w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-xl mx-4">
             <div className="flex items-start gap-3">
               <div className="rounded bg-rose-500/15 p-2 text-rose-300">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
@@ -490,8 +490,8 @@ const StudentDashboard = () => {
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setShowLogoutModal(false)} className="btn-muted px-4 py-2">Cancel</button>
-              <button onClick={logout} className="btn-primary-blue px-4 py-2">Logout</button>
+              <button onClick={() => setShowLogoutModal(false)} className="btn-muted px-4 py-2 touch-target">Cancel</button>
+              <button onClick={logout} className="btn-primary-blue px-4 py-2 touch-target">Logout</button>
             </div>
           </div>
         </div>

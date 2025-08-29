@@ -133,7 +133,7 @@ const StudentLogin = () => {
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-200 touch-target"
                   >
                     {showPassword ? (
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
@@ -150,7 +150,7 @@ const StudentLogin = () => {
                   </button>
                 </div>
 
-                <button type="submit" disabled={loading} className="mt-5 inline-flex w-full items-center justify-center btn-primary-blue disabled:opacity-60">
+                <button type="submit" disabled={loading} className="mt-5 inline-flex w-full items-center justify-center btn-primary-blue disabled:opacity-60 touch-target">
                   {loading ? 'Signing in...' : 'Sign in'}
                 </button>
               </form>
@@ -159,7 +159,7 @@ const StudentLogin = () => {
                 New to KIT Library? Join our community and start your journey today!
               </p>
 
-              <Link to="/student/register" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70">
+              <Link to="/student/register" className="mt-3 inline-flex w-full items-center justify-center rounded-lg border border-white/10 px-4 py-2.5 text-slate-100 hover:bg-slate-800/70 touch-target">
                 Create an account
               </Link>
             </div>
