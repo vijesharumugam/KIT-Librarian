@@ -121,7 +121,7 @@ const StudentRegister = () => {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm text-slate-300">Email (for notifications)</label>
+                <label htmlFor="email" className="block text-sm text-slate-300">Email</label>
                 <input
                   id="email"
                   name="email"
